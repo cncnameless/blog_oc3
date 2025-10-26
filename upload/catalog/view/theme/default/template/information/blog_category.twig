@@ -1,0 +1,169 @@
+{{ header }}
+<div id="information-blog-category" class="container">
+  <ul class="breadcrumb">
+    {% for breadcrumb in breadcrumbs %}
+    <li>
+      {% if loop.last %}
+        {{ breadcrumb.text }}
+      {% else %}
+        <a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  <div class="row">{{ column_left }}
+    {% if column_left and column_right %}
+    {% set class = 'col-sm-6' %}
+    {% elseif column_left or column_right %}
+    {% set class = 'col-sm-9' %}
+    {% else %}
+    {% set class = 'col-sm-12' %}
+    {% endif %}
+    <div id="content" class="{{ class }}">
+      {{ content_top }}
+      
+      {# === СПЕЦИАЛЬНЫЙ БЛОК ДЛЯ СТРАНИЦЫ АВТОРОВ === #}
+      {% if authors is defined %}
+        <h1>{{ heading_title }}</h1>
+        
+        {% if authors %}
+        <div class="authors-list">
+          <div class="row">
+            {% for author in authors %}
+            <div class="col-lg-4 col-md-4 col-sm-6 col-xs-12">
+              <div class="author-card text-center" style="margin-bottom: 30px; padding: 20px; border: 1px solid #eee; border-radius: 8px; height: 100%;">
+                <div class="author-image" style="margin-bottom: 15px;">
+                  <img src="{{ author.image }}" alt="{{ author.name }}" style="width: 150px; height: 150px; border-radius: 50%; object-fit: cover; border: 4px solid #f8f9fa;">
+                </div>
+                <h3 style="margin: 0 0 10px 0;">
+                  <a href="{{ author.href }}" style="color: #333; text-decoration: none;">{{ author.name }}</a>
+                </h3>
+                {% if author.job_title %}
+                <p class="author-job-title" style="color: #666; font-size: 14px; margin-bottom: 10px;">{{ author.job_title }}</p>
+                {% endif %}
+                {% if author.bio %}
+                <p class="author-bio" style="font-size: 13px; line-height: 1.4; color: #555; margin-bottom: 15px;">{{ author.bio }}</p>
+                {% endif %}
+                <div class="author-stats" style="margin-bottom: 15px;">
+                  <span class="badge" style="background: #4ab2f1; font-size: 12px;">{{ author.total_articles }} {{ text_articles_count }}</span>
+                </div>
+                <a href="{{ author.href }}" class="btn btn-primary">{{ button_view_author }}</a>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% else %}
+        <div class="alert alert-info">
+          <p>{{ text_no_authors }}</p>
+        </div>
+        {% endif %}
+      
+      {# === СТАНДАРТНАЯ СТРАНИЦА КАТЕГОРИЙ БЛОГА === #}
+      {% else %}
+        <h1>{{ heading_title }}</h1>
+        
+        {% if thumb %}
+        <div class="blog-category-image">
+          <img src="{{ thumb }}" alt="{{ heading_title }}" class="img-responsive" />
+        </div>
+        {% endif %}
+        
+        {% if description %}
+        <div class="blog-category-description">{{ description }}</div>
+        {% endif %}
+
+        {# === БЛОК ПОДКАТЕГОРИЙ (для внутренних страниц категорий) === #}
+        {% if subcategories %}
+        <div class="blog-subcategories" style="margin: 30px 0;">
+          <h3>{{ text_subcategories }}</h3>
+          <div class="row">
+            {% for subcategory in subcategories %}
+            <div class="col-lg-3 col-md-4 col-sm-6 col-xs-12">
+              <div class="subcategory-item text-center" style="margin-bottom: 20px; padding: 15px; border: 1px solid #eee; border-radius: 5px;">
+                <h4 style="margin: 0;"><a href="{{ subcategory.href }}">{{ subcategory.name }}</a></h4>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+
+        {# === БЛОК КОРНЕВЫХ КАТЕГОРИЙ И ССЫЛКИ НА АВТОРОВ (только для главной блога) === #}
+        {% if root_categories and not blog_category_id %}
+        <div class="blog-root-categories" style="margin: 30px 0;">
+          <h2>{{ text_blog_categories }}</h2>
+          <div class="row">
+            {% for category in root_categories %}
+            <div class="col-lg-4 col-md-4 col-sm-6 col-xs-12">
+              <div class="category-item text-center" style="margin-bottom: 20px; padding: 20px; background: #f9f9f9; border-radius: 5px;">
+                <h3 style="margin: 0 0 10px 0;"><a href="{{ category.href }}">{{ category.name }}</a></h3>
+              </div>
+            </div>
+            {% endfor %}
+            
+            {# === ДОБАВЛЯЕМ КАРТОЧКУ С ССЫЛКОЙ НА АВТОРОВ === #}
+            <div class="col-lg-4 col-md-4 col-sm-6 col-xs-12">
+              <div class="category-item text-center" style="margin-bottom: 20px; padding: 20px; background: #e9f7fe; border-radius: 5px; border: 2px dashed #4ab2f1;">
+                <h3 style="margin: 0 0 10px 0;">
+                  <a href="{{ authors_link }}" style="color: #2a6496;">
+                    <i class="fa fa-users" style="margin-right: 8px;"></i>{{ text_authors }}
+                  </a>
+                </h3>
+                <p style="margin: 0; color: #555; font-size: 13px;">{{ text_authors_description }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
+        {# === СТАТЬИ === #}
+        {% if articles %}
+        <div class="blog-articles" style="margin-top: 30px;">
+          <h2>{% if blog_category_id %}{{ text_articles_in_category }}{% else %}{{ text_latest_articles }}{% endif %}</h2>
+          <div class="row">
+            {% for article in articles %}
+            <div class="col-lg-4 col-md-4 col-sm-6 col-xs-12">
+              <div class="blog-item">
+                <div class="blog-image">
+                  <a href="{{ article.href }}"><img src="{{ article.image }}" alt="{{ article.title }}" class="img-responsive" /></a>
+                </div>
+                <div class="blog-info">
+                  <h4><a href="{{ article.href }}">{{ article.title }}</a></h4>
+                  <p class="blog-meta">
+                    <span><i class="fa fa-calendar"></i> {{ article.date_added }}</span>
+                    <span><i class="fa fa-eye"></i> {{ article.viewed }} {{ text_views }}</span>
+                    <span><i class="fa fa-clock-o"></i> {{ article.reading_time }} {{ text_reading_time }}</span>
+                  </p>
+                  <p class="blog-description">{{ article.description }}</p>
+                  <a href="{{ article.href }}" class="btn btn-primary">{{ button_read_more }}</a>
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+          
+          <div class="row">
+            <div class="col-sm-6 text-left">{{ pagination }}</div>
+            <div class="col-sm-6 text-right">{{ results }}</div>
+          </div>
+        </div>
+        {% else %}
+          {% if not blog_category_id %}
+          <div class="alert alert-info">
+            <p>{{ text_empty_blog }}</p>
+          </div>
+          {% else %}
+          <div class="alert alert-info">
+            <p>{{ text_empty_category }}</p>
+          </div>
+          {% endif %}
+        {% endif %}
+      {% endif %}
+
+      {{ content_bottom }}
+    </div>
+    {{ column_right }}
+  </div>
+</div>
+{{ footer }}
