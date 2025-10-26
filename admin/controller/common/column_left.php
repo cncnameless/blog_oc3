@@ -110,14 +110,6 @@ class ControllerCommonColumnLeft extends Controller {
 				);
 			}
 
-			if ($this->user->hasPermission('access', 'catalog/information')) {
-				$catalog[] = array(
-					'name'	   => $this->language->get('text_information'),
-					'href'     => $this->url->link('catalog/information', 'user_token=' . $this->session->data['user_token'], true),
-					'children' => array()
-				);
-			}
-
 			if ($catalog) {
 				$data['menus'][] = array(
 					'id'       => 'menu-catalog',
@@ -125,6 +117,47 @@ class ControllerCommonColumnLeft extends Controller {
 					'name'	   => $this->language->get('text_catalog'),
 					'href'     => '',
 					'children' => $catalog
+				);
+			}
+
+			// Blog
+			$blog = array();
+
+			// === ДОБАВЛЯЕМ ПУНКТ ДЛЯ СТАТЕЙ ===
+			if ($this->user->hasPermission('access', 'catalog/information')) {
+				$blog[] = array(
+					'name'     => 'Статьи',
+					'href'     => $this->url->link('catalog/information', 'user_token=' . $this->session->data['user_token'], true),
+					'children' => array()
+				);
+			}
+			// === КОНЕЦ БЛОКА ===
+
+			if ($this->user->hasPermission('access', 'catalog/blog_category')) {
+				$blog[] = array(
+					'name'     => 'Категории блога',
+					'href'     => $this->url->link('catalog/blog_category', 'user_token=' . $this->session->data['user_token'], true),
+					'children' => array()
+				);
+			}
+
+			// === ДОБАВЛЯЕМ ПУНКТ ДЛЯ АВТОРОВ ===
+			if ($this->user->hasPermission('access', 'catalog/author')) {
+				$blog[] = array(
+					'name'     => 'Авторы статей',
+					'href'     => $this->url->link('catalog/author', 'user_token=' . $this->session->data['user_token'], true),
+					'children' => array()
+				);
+			}
+			// === КОНЕЦ БЛОКА ===
+
+			if ($blog) {
+				$data['menus'][] = array(
+					'id'       => 'menu-blog',
+					'icon'     => 'fa-folder',
+					'name'     => 'Блог',
+					'href'     => '',
+					'children' => $blog
 				);
 			}
 
@@ -163,6 +196,14 @@ class ControllerCommonColumnLeft extends Controller {
 				);
 			}
 
+			if ($this->user->hasPermission('access', 'marketplace/api')) {
+				$marketplace[] = array(
+					'name'	   => $this->language->get('text_api'),
+					'href'     => $this->url->link('marketplace/api', 'user_token=' . $this->session->data['user_token'], true),
+					'children' => array()
+				);
+			}
+
 			if ($marketplace) {
 				$data['menus'][] = array(
 					'id'       => 'menu-extension',
@@ -180,6 +221,14 @@ class ControllerCommonColumnLeft extends Controller {
 				$design[] = array(
 					'name'	   => $this->language->get('text_layout'),
 					'href'     => $this->url->link('design/layout', 'user_token=' . $this->session->data['user_token'], true),
+					'children' => array()
+				);
+			}
+
+			if ($this->user->hasPermission('access', 'design/theme')) {
+				$design[] = array(
+					'name'	   => $this->language->get('text_theme'),
+					'href'     => $this->url->link('design/theme', 'user_token=' . $this->session->data['user_token'], true),
 					'children' => array()
 				);
 			}
@@ -346,6 +395,25 @@ class ControllerCommonColumnLeft extends Controller {
 				);
 			}
 
+			// Affiliate
+			$affiliate = array();
+
+			if ($this->user->hasPermission('access', 'marketing/affiliate')) {
+				$affiliate[] = array(
+					'name'	   => $this->language->get('text_affiliate'),
+					'href'     => $this->url->link('marketing/affiliate', 'user_token=' . $this->session->data['user_token'], true),
+					'children' => array()
+				);
+			}
+
+			if ($affiliate) {
+				$marketing[] = array(
+					'name'	   => $this->language->get('text_affiliate'),
+					'href'     => '',
+					'children' => $affiliate
+				);
+			}
+
 			if ($this->user->hasPermission('access', 'marketing/contact')) {
 				$marketing[] = array(
 					'name'	   => $this->language->get('text_contact'),
@@ -482,7 +550,7 @@ class ControllerCommonColumnLeft extends Controller {
 
 			if ($return) {
 				$localisation[] = array(
-					'name'	   => $this->language->get('text_return'),
+					'name'	   => $this->language->get('text_returns'),
 					'href'     => '',
 					'children' => $return
 				);

@@ -3,10 +3,10 @@
   <ul class="breadcrumb">
     {% for breadcrumb in breadcrumbs %}
     <li>
-      {% if loop.last %}
-        {{ breadcrumb.text }}
-      {% else %}
+      {% if breadcrumb.href %}
         <a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a>
+      {% else %}
+        {{ breadcrumb.text }}
       {% endif %}
     </li>
     {% endfor %}
@@ -22,7 +22,7 @@
     <div id="content" class="{{ class }}">
       {{ content_top }}
       
-      {# === СПЕЦИАЛЬНЫЙ БЛОК ДЛЯ СТРАНИЦЫ АВТОРОВ === #}
+      {# Страница авторов #}
       {% if authors is defined %}
         <h1>{{ heading_title }}</h1>
         
@@ -59,7 +59,7 @@
         </div>
         {% endif %}
       
-      {# === СТАНДАРТНАЯ СТРАНИЦА КАТЕГОРИЙ БЛОГА === #}
+      {# Страница категорий блога #}
       {% else %}
         <h1>{{ heading_title }}</h1>
         
@@ -73,10 +73,9 @@
         <div class="blog-category-description">{{ description }}</div>
         {% endif %}
 
-        {# === БЛОК ПОДКАТЕГОРИЙ (для внутренних страниц категорий) === #}
+        {# Подкатегории #}
         {% if subcategories %}
         <div class="blog-subcategories" style="margin: 30px 0;">
-          <h3>{{ text_subcategories }}</h3>
           <div class="row">
             {% for subcategory in subcategories %}
             <div class="col-lg-3 col-md-4 col-sm-6 col-xs-12">
@@ -89,10 +88,9 @@
         </div>
         {% endif %}
 
-        {# === БЛОК КОРНЕВЫХ КАТЕГОРИЙ И ССЫЛКИ НА АВТОРОВ (только для главной блога) === #}
+        {# Главная страница блога #}
         {% if root_categories and not blog_category_id %}
         <div class="blog-root-categories" style="margin: 30px 0;">
-          <h2>{{ text_blog_categories }}</h2>
           <div class="row">
             {% for category in root_categories %}
             <div class="col-lg-4 col-md-4 col-sm-6 col-xs-12">
@@ -102,7 +100,7 @@
             </div>
             {% endfor %}
             
-            {# === ДОБАВЛЯЕМ КАРТОЧКУ С ССЫЛКОЙ НА АВТОРОВ === #}
+            {# Карточка авторов #}
             <div class="col-lg-4 col-md-4 col-sm-6 col-xs-12">
               <div class="category-item text-center" style="margin-bottom: 20px; padding: 20px; background: #e9f7fe; border-radius: 5px; border: 2px dashed #4ab2f1;">
                 <h3 style="margin: 0 0 10px 0;">
@@ -117,10 +115,12 @@
         </div>
         {% endif %}
 
-        {# === СТАТЬИ === #}
+        {# Статьи #}
         {% if articles %}
         <div class="blog-articles" style="margin-top: 30px;">
-          <h2>{% if blog_category_id %}{{ text_articles_in_category }}{% else %}{{ text_latest_articles }}{% endif %}</h2>
+          {% if blog_category_id %}
+          <h2>{{ text_articles_in_category }}</h2>
+          {% endif %}
           <div class="row">
             {% for article in articles %}
             <div class="col-lg-4 col-md-4 col-sm-6 col-xs-12">

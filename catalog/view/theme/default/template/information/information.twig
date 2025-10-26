@@ -1,12 +1,12 @@
 {{ header }}
 <div id="information-information" class="container">
   <ul class="breadcrumb">
-{% for breadcrumb in breadcrumbs %}
+    {% for breadcrumb in breadcrumbs %}
     <li>
-      {% if loop.last %}
-        {{ breadcrumb.text }}
-      {% else %}
+      {% if breadcrumb.href %}
         <a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a>
+      {% else %}
+        {{ breadcrumb.text }}
       {% endif %}
     </li>
     {% endfor %}
@@ -21,7 +21,68 @@
     {% endif %}
     <div id="content" class="{{ class }}">{{ content_top }}
       <h1>{{ heading_title }}</h1>
-      {{ description }}{{ content_bottom }}</div>
+      
+      <!-- Мета-информация статьи -->
+      <div class="article-meta" style="margin: 15px 0; color: #999; font-size: 14px;">
+        <span style="margin-right: 15px;"><i class="fa fa-calendar"></i> {{ date_added }}</span>
+        {% if viewed %}
+        <span style="margin-right: 15px;"><i class="fa fa-eye"></i> {{ viewed }} {{ text_views }}</span>
+        {% endif %}
+        {% if reading_time %}
+        <span><i class="fa fa-clock-o"></i> {{ reading_time }} {{ text_reading_time }}</span>
+        {% endif %}
+      </div>
+      
+      <!-- Блок авторов -->
+      {% if authors %}
+      <div class="article-authors" style="margin: 20px 0; padding: 20px; background: #f9f9f9; border-radius: 5px;">
+        <h3 style="margin-top: 0; margin-bottom: 15px;">
+          <i class="fa fa-users"></i> 
+          {% if authors|length > 1 %}Авторы статьи{% else %}Автор статьи{% endif %}
+        </h3>
+        <div class="row">
+          {% for author in authors %}
+          <div class="col-sm-{% if authors|length > 1 %}6{% else %}12{% endif %}" style="margin-bottom: 15px;">
+            <div class="author-card" style="display: flex; align-items: flex-start;">
+              <div style="margin-right: 15px; flex-shrink: 0;">
+                <img src="{{ author.image }}" alt="{{ author.name }}" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+              </div>
+              <div style="flex-grow: 1;">
+                <h4 style="margin: 0 0 5px 0; font-size: 16px;">
+                  <a href="{{ author.href }}" style="color: #333; text-decoration: none; font-weight: bold;">
+                    {{ author.name }}
+                  </a>
+                  {% if author.is_primary %}
+                  <small style="color: #ff6b00; font-weight: normal;">(Основной автор)</small>
+                  {% endif %}
+                </h4>
+                {% if author.job_title %}
+                <p style="margin: 0; color: #666; font-size: 14px; font-weight: 500;">{{ author.job_title }}</p>
+                {% endif %}
+                {% if author.bio %}
+                <p style="margin: 8px 0 0 0; font-size: 13px; line-height: 1.4; color: #555;">{{ author.bio }}</p>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+      
+      <!-- Содержание статьи -->
+      <div class="article-content" style="margin-top: 30px;">
+        {{ description }}
+      </div>
+      
+      <!-- Microdata Schema.org -->
+      {% if microdata %}
+      <script type="application/ld+json">
+      {{ microdata|json_encode(constant('JSON_UNESCAPED_SLASHES')) }}
+      </script>
+      {% endif %}
+      
+      {{ content_bottom }}</div>
     {{ column_right }}</div>
 </div>
 {{ footer }}

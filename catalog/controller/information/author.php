@@ -3,30 +3,21 @@ class ControllerInformationAuthor extends Controller {
     public function index() {
         $this->load->language('information/author');
         
-        // Логируем входящие параметры
-        error_log("=== AUTHOR CONTROLLER ===");
-        error_log("GET parameters: " . print_r($this->request->get, true));
-
         $this->load->model('catalog/author');
         $this->load->model('catalog/information');
         $this->load->model('tool/image');
 
+        // Определяем, показываем ли список авторов или конкретного автора
         if (isset($this->request->get['author_id'])) {
-            $author_id = (int)$this->request->get['author_id'];
+            $this->showAuthor((int)$this->request->get['author_id']);
         } else {
-            $author_id = 0;
+            $this->showAuthorsList();
         }
+    }
 
-        error_log("Author ID from request: " . $author_id);
-
+    private function showAuthor($author_id) {
         // Получаем информацию об авторе
         $author_info = $this->model_catalog_author->getAuthor($author_id);
-
-        error_log("Author info result: " . ($author_info ? 'FOUND' : 'NOT FOUND'));
-        if ($author_info) {
-            error_log("Author name: " . $author_info['name']);
-            error_log("Author status: " . $author_info['status']);
-        }
 
         if ($author_info && $author_info['status']) {
             $this->document->setTitle($author_info['meta_title'] ? $author_info['meta_title'] : $author_info['name']);
@@ -45,15 +36,15 @@ class ControllerInformationAuthor extends Controller {
                 'href' => $this->url->link('information/blog_category')
             );
 
-            // Исправляем ссылку на страницу авторов
             $data['breadcrumbs'][] = array(
                 'text' => $this->language->get('text_authors'),
-                'href' => $this->url->link('information/blog_category', 'authors_page=1')
+                'href' => $this->url->link('information/author')
             );
 
+            // ИСПРАВЛЕНО: Последняя крошка без ссылки
             $data['breadcrumbs'][] = array(
                 'text' => $author_info['name'],
-                'href' => $this->url->link('information/author', 'author_id=' . $author_id)
+                'href' => ''
             );
 
             $data['heading_title'] = $author_info['name'];
@@ -112,9 +103,8 @@ class ControllerInformationAuthor extends Controller {
                 )
             );
 
-            // Языковые переменные
-            $data['article_total'] = $article_total; // Добавляем эту строку
-            $data['text_articles_count'] = $this->language->get('text_articles_count'); // Убираем sprintf
+            // ИСПРАВЛЕНО: Убрано дублирование - используем только article_total для шаблона
+            $data['article_total'] = $article_total;
             $data['text_views'] = $this->language->get('text_views');
             $data['text_reading_time'] = $this->language->get('text_reading_time');
             $data['button_read_more'] = $this->language->get('button_read_more');
@@ -134,8 +124,6 @@ class ControllerInformationAuthor extends Controller {
             $this->response->setOutput($this->load->view('information/author', $data));
         } else {
             // Автор не найден или неактивен
-            error_log("Author not found or inactive, showing 404");
-            
             $this->load->language('error/not_found');
             
             $this->document->setTitle($this->language->get('text_error'));
@@ -154,12 +142,12 @@ class ControllerInformationAuthor extends Controller {
 
             $data['breadcrumbs'][] = array(
                 'text' => $this->language->get('text_authors'),
-                'href' => $this->url->link('information/blog_category', 'authors_page=1')
+                'href' => $this->url->link('information/author')
             );
 
             $data['breadcrumbs'][] = array(
                 'text' => $this->language->get('text_error'),
-                'href' => $this->url->link('information/author', 'author_id=' . $author_id)
+                'href' => ''
             );
 
             $data['heading_title'] = $this->language->get('text_error');
@@ -177,6 +165,65 @@ class ControllerInformationAuthor extends Controller {
 
             $this->response->setOutput($this->load->view('error/not_found', $data));
         }
+    }
+
+    private function showAuthorsList() {
+        $this->document->setTitle($this->language->get('heading_title'));
+        $this->document->setDescription($this->language->get('meta_description'));
+        $this->document->setKeywords($this->language->get('meta_keyword'));
+        
+        $data['breadcrumbs'] = array();
+        
+        $data['breadcrumbs'][] = array(
+            'text' => $this->language->get('text_home'),
+            'href' => $this->url->link('common/home')
+        );
+        
+        $data['breadcrumbs'][] = array(
+            'text' => $this->language->get('text_blog'),
+            'href' => $this->url->link('information/blog_category')
+        );
+
+        // ИСПРАВЛЕНО: Последняя крошка без ссылки
+        $data['breadcrumbs'][] = array(
+            'text' => $this->language->get('text_authors'),
+            'href' => ''
+        );
+
+        $data['authors'] = array();
+        $results = $this->model_catalog_author->getAllAuthors();
+
+        foreach ($results as $result) {
+            if ($result['image'] && file_exists(DIR_IMAGE . $result['image'])) {
+                $image = $this->model_tool_image->resize($result['image'], 300, 300);
+            } else {
+                $image = $this->model_tool_image->resize('placeholder.png', 300, 300);
+            }
+
+            $data['authors'][] = array(
+                'author_id' => $result['author_id'],
+                'name' => $result['name'],
+                'job_title' => $result['job_title'],
+                'image' => $image,
+                'bio' => utf8_substr(strip_tags(html_entity_decode($result['bio'], ENT_QUOTES, 'UTF-8')), 0, 200) . '..',
+                'total_articles' => $result['article_count'],
+                'href' => $this->url->link('information/author', 'author_id=' . $result['author_id'])
+            );
+        }
+
+        $data['heading_title'] = $this->language->get('heading_title');
+        $data['text_no_authors'] = $this->language->get('text_no_authors');
+        $data['text_articles_count'] = $this->language->get('text_articles_count');
+        $data['button_view_author'] = $this->language->get('button_view_author');
+
+        $data['column_left'] = $this->load->controller('common/column_left');
+        $data['column_right'] = $this->load->controller('common/column_right');
+        $data['content_top'] = $this->load->controller('common/content_top');
+        $data['content_bottom'] = $this->load->controller('common/content_bottom');
+        $data['footer'] = $this->load->controller('common/footer');
+        $data['header'] = $this->load->controller('common/header');
+
+        $this->response->setOutput($this->load->view('information/author_list', $data));
     }
 }
 ?>

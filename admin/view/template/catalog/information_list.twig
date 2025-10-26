@@ -29,6 +29,51 @@
         <h3 class="panel-title"><i class="fa fa-list"></i> {{ text_list }}</h3>
       </div>
       <div class="panel-body">
+        <div class="well">
+          <div class="row">
+            <div class="col-sm-4">
+              <div class="form-group">
+                <label class="control-label" for="input-name">{{ entry_name }}</label>
+                <input type="text" name="filter_name" value="{{ filter_name }}" placeholder="{{ entry_name }}" id="input-name" class="form-control" />
+              </div>
+            </div>
+            <div class="col-sm-4">
+              <div class="form-group">
+                <label class="control-label" for="input-blog-category">{{ entry_blog_category }}</label>
+                <select name="filter_blog_category" id="input-blog-category" class="form-control">
+                  <option value=""></option>
+                  {% for blog_category in blog_categories %}
+                  {% if blog_category.blog_category_id == filter_blog_category %}
+                  <option value="{{ blog_category.blog_category_id }}" selected="selected">{{ blog_category.name }}</option>
+                  {% else %}
+                  <option value="{{ blog_category.blog_category_id }}">{{ blog_category.name }}</option>
+                  {% endif %}
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+            <div class="col-sm-4">
+              <div class="form-group">
+                <label class="control-label" for="input-status">{{ entry_status }}</label>
+                <select name="filter_status" id="input-status" class="form-control">
+                  <option value=""></option>
+                  {% if filter_status == '1' %}
+                  <option value="1" selected="selected">{{ text_enabled }}</option>
+                  {% else %}
+                  <option value="1">{{ text_enabled }}</option>
+                  {% endif %}
+                  {% if filter_status == '0' %}
+                  <option value="0" selected="selected">{{ text_disabled }}</option>
+                  {% else %}
+                  <option value="0">{{ text_disabled }}</option>
+                  {% endif %}
+                </select>
+              </div>
+              <button type="button" id="button-filter" class="btn btn-primary pull-right"><i class="fa fa-filter"></i> {{ button_filter }}</button>
+              <button type="button" id="button-clear" class="btn btn-default pull-right" style="margin-right: 10px;"><i class="fa fa-refresh"></i> Очистить</button>
+            </div>
+          </div>
+        </div>
         <form action="{{ delete }}" method="post" enctype="multipart/form-data" id="form-information">
           <div class="table-responsive">
             <table class="table table-bordered table-hover">
@@ -59,10 +104,7 @@
                     {% endif %}</td>
                   <td class="text-left">{{ information.title }}</td>
                   <td class="text-right">{{ information.sort_order }}</td>
-                  <td class="text-right">
-                    <a href="{{ information.view }}" target="_blank" data-toggle="tooltip" title="{{ button_view }}" class="btn btn-info"><i class="fa fa-eye"></i></a>
-                    <a href="{{ information.edit }}" data-toggle="tooltip" title="{{ button_edit }}" class="btn btn-primary"><i class="fa fa-pencil"></i></a>
-                  </td>
+                  <td class="text-right"><a href="{{ information.edit }}" data-toggle="tooltip" title="{{ button_edit }}" class="btn btn-primary"><i class="fa fa-pencil"></i></a></td>
                 </tr>
                 {% endfor %}
                 {% else %}
@@ -81,5 +123,54 @@
       </div>
     </div>
   </div>
+  <script type="text/javascript"><!--
+$('#button-filter').on('click', function() {
+	var url = '';
+
+	var filter_name = $('input[name=\'filter_name\']').val();
+
+	if (filter_name) {
+		url += '&filter_name=' + encodeURIComponent(filter_name);
+	}
+
+	var filter_blog_category = $('select[name=\'filter_blog_category\']').val();
+
+	if (filter_blog_category) {
+		url += '&filter_blog_category=' + encodeURIComponent(filter_blog_category);
+	}
+
+	var filter_status = $('select[name=\'filter_status\']').val();
+
+	if (filter_status !== '') {
+		url += '&filter_status=' + encodeURIComponent(filter_status);
+	}
+
+	location = 'index.php?route=catalog/information&user_token={{ user_token }}' + url;
+});
+
+$('#button-clear').on('click', function() {
+	location = 'index.php?route=catalog/information&user_token={{ user_token }}';
+});
+
+$('#input-name').autocomplete({
+	'source': function(request, response) {
+		$.ajax({
+			url: 'index.php?route=catalog/information/autocomplete&user_token={{ user_token }}&filter_name=' +  encodeURIComponent(request),
+			dataType: 'json',
+			success: function(json) {
+				response($.map(json, function(item) {
+					return {
+						label: item['title'],
+						value: item['information_id']
+					}
+				}));
+			}
+		});
+	},
+	'select': function(item) {
+		$('#input-name').val(item['label']);
+	}
+});
+//--></script>
 </div>
 {{ footer }}
