@@ -535,6 +535,32 @@ class ControllerCatalogInformation extends Controller {
 
         $data['entry_date_added'] = $this->language->get('entry_date_added');
 
+        // === ДОБАВЛЯЕМ ДАННЫЕ ДЛЯ МИКРОРАЗМЕТКИ ===
+        if (isset($this->request->post['schema_type'])) {
+            $data['schema_type'] = $this->request->post['schema_type'];
+        } elseif (!empty($information_info)) {
+            $data['schema_type'] = $information_info['schema_type'];
+        } else {
+            $data['schema_type'] = 'BlogPosting';
+        }
+
+        if (isset($this->request->post['rating_value'])) {
+            $data['rating_value'] = $this->request->post['rating_value'];
+        } elseif (!empty($information_info)) {
+            $data['rating_value'] = $information_info['rating_value'];
+        } else {
+            $data['rating_value'] = '';
+        }
+
+        // Типы разметки для select
+        $data['schema_types'] = array(
+            'Organization' => 'Organization',
+            'Review' => 'Review', 
+            'BlogPosting' => 'BlogPosting',
+            'NewsArticle' => 'NewsArticle'
+        );
+        // === КОНЕЦ БЛОКА МИКРОРАЗМЕТКИ ===
+
         if (isset($this->request->post['bottom'])) {
             $data['bottom'] = $this->request->post['bottom'];
         } elseif (!empty($information_info)) {
@@ -626,6 +652,18 @@ class ControllerCatalogInformation extends Controller {
             // Проверка meta_title только на максимальную длину
             if (isset($value['meta_title']) && utf8_strlen($value['meta_title']) > 255) {
                 $this->error['meta_title'][$language_id] = $this->language->get('error_meta_title');
+            }
+        }
+
+        // Проверка рейтинга для типа Review
+        if (isset($this->request->post['schema_type']) && $this->request->post['schema_type'] == 'Review') {
+            if (!isset($this->request->post['rating_value']) || $this->request->post['rating_value'] === '') {
+                $this->error['warning'] = 'Для типа Review необходимо указать значение рейтинга';
+            } else {
+                $rating = (float)$this->request->post['rating_value'];
+                if ($rating < 1 || $rating > 5) {
+                    $this->error['warning'] = 'Значение рейтинга должно быть от 1 до 5';
+                }
             }
         }
 

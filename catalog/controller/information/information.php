@@ -109,38 +109,9 @@ class ControllerInformationInformation extends Controller {
                     );
                 }
 
-                // Microdata для Schema.org
-                $data['microdata'] = array(
-                    '@context' => 'https://schema.org',
-                    '@type' => 'Article',
-                    'headline' => $information_info['title'],
-                    'datePublished' => $information_info['date_added'],
-                    'dateModified' => $information_info['date_modified'],
-                    'mainEntityOfPage' => $this->url->link('information/information', 'information_id=' . $information_id),
-                    'author' => array(),
-                    'publisher' => array(
-                        '@type' => 'Organization',
-                        'name' => $this->config->get('config_name'),
-                        'logo' => array(
-                            '@type' => 'ImageObject',
-                            'url' => $this->config->get('config_url') . 'image/' . $this->config->get('config_logo')
-                        )
-                    ),
-                    'description' => strip_tags(html_entity_decode($information_info['description'], ENT_QUOTES, 'UTF-8'))
-                );
+                // Microdata для Schema.org - ОБНОВЛЕННЫЙ КОД
+                $data['microdata'] = $this->generateMicrodata($information_info, $data);
 
-                // Добавляем авторов в микроразметку
-                foreach ($data['authors'] as $author) {
-                    $data['microdata']['author'][] = array(
-                        '@type' => 'Person',
-                        'name' => $author['name'],
-                        'jobTitle' => $author['job_title']
-                    );
-                }
-
-                // Языковые переменные для блога
-                $data['text_views'] = $this->language->get('text_views');
-                $data['text_reading_time'] = $this->language->get('text_reading_time');
             } else {
                 // Для обычных информационных страниц
                 $data['date_added'] = '';
@@ -148,9 +119,10 @@ class ControllerInformationInformation extends Controller {
                 $data['reading_time'] = '';
                 $data['authors'] = array();
                 $data['microdata'] = array();
-                $data['text_views'] = '';
-                $data['text_reading_time'] = '';
             }
+
+            $data['text_views'] = $this->language->get('text_views');
+            $data['text_reading_time'] = $this->language->get('text_reading_time');
 
             $data['continue'] = $this->url->link('common/home');
 
@@ -205,6 +177,84 @@ class ControllerInformationInformation extends Controller {
         // Если у вас есть категории для информационных страниц, реализуйте этот метод
         // Пока возвращаем пустой массив
         return array();
+    }
+
+    /**
+     * Генерация микроразметки JSON-LD
+     */
+    private function generateMicrodata($information_info, $data) {
+        $microdata = array();
+        $base_url = $this->config->get('config_url');
+        
+        $schema_type = isset($information_info['schema_type']) ? $information_info['schema_type'] : 'BlogPosting';
+        
+        // Основные данные, общие для всех типов
+        $microdata['@context'] = 'https://schema.org';
+        $microdata['@type'] = $schema_type;
+        $microdata['mainEntityOfPage'] = array(
+            '@type' => 'WebPage',
+            '@id' => $this->url->link('information/information', 'information_id=' . $information_info['information_id'])
+        );
+        $microdata['headline'] = $information_info['title'];
+        $microdata['datePublished'] = $information_info['date_added'];
+        $microdata['dateModified'] = $information_info['date_modified'];
+        
+        // Добавляем авторов
+        if (isset($data['authors']) && $data['authors']) {
+            $microdata['author'] = array();
+            foreach ($data['authors'] as $author) {
+                $microdata['author'][] = array(
+                    '@type' => 'Person',
+                    'name' => $author['name'],
+                    'jobTitle' => $author['job_title']
+                );
+            }
+        }
+        
+        // Издатель (организация)
+        $microdata['publisher'] = array(
+            '@type' => 'Organization',
+            'name' => $this->config->get('config_name'),
+            'logo' => array(
+                '@type' => 'ImageObject',
+                'url' => $base_url . 'image/' . $this->config->get('config_logo')
+            )
+        );
+        
+        // Описание
+        $microdata['description'] = strip_tags(html_entity_decode($information_info['description'], ENT_QUOTES, 'UTF-8'));
+        
+        // Специфичные поля для каждого типа
+        switch ($schema_type) {
+            case 'Review':
+                if (isset($information_info['rating_value']) && $information_info['rating_value'] !== null) {
+                    $microdata['reviewRating'] = array(
+                        '@type' => 'Rating',
+                        'ratingValue' => (float)$information_info['rating_value'],
+                        'bestRating' => 5,
+                        'worstRating' => 1
+                    );
+                }
+                break;
+                
+            case 'NewsArticle':
+                $microdata['dateline'] = $information_info['date_added'];
+                break;
+                
+            case 'Organization':
+                // Для Organization убираем лишние поля
+                unset($microdata['author']);
+                unset($microdata['datePublished']);
+                unset($microdata['dateModified']);
+                break;
+                
+            case 'BlogPosting':
+            default:
+                // Стандартные поля для блога
+                break;
+        }
+        
+        return $microdata;
     }
 }
 ?>

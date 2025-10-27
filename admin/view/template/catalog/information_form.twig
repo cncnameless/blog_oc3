@@ -28,6 +28,7 @@
             <li class="active"><a href="#tab-general" data-toggle="tab">{{ tab_general }}</a></li>
             <li><a href="#tab-data" data-toggle="tab">{{ tab_data }}</a></li>
             <li><a href="#tab-seo" data-toggle="tab">{{ tab_seo }}</a></li>
+            <li><a href="#tab-schema" data-toggle="tab">Микроразметка</a></li>
             <li><a href="#tab-blog" data-toggle="tab">{{ tab_blog }}</a></li>
             <li><a href="#tab-authors" data-toggle="tab">Авторы</a></li>
             <li><a href="#tab-design" data-toggle="tab">{{ tab_design }}</a></li>
@@ -191,6 +192,37 @@
                 </div>
               </div>
             </div>
+            <div class="tab-pane" id="tab-schema">
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-schema-type">{{ entry_schema_type }}</label>
+                <div class="col-sm-10">
+                  <select name="schema_type" id="input-schema-type" class="form-control">
+                    {% for key, value in schema_types %}
+                      {% if key == schema_type %}
+                        <option value="{{ key }}" selected="selected">{{ value }}</option>
+                      {% else %}
+                        <option value="{{ key }}">{{ value }}</option>
+                      {% endif %}
+                    {% endfor %}
+                  </select>
+                  <small class="text-muted">{{ help_schema_type }}</small>
+                </div>
+              </div>
+              <div class="form-group" id="rating-field" style="display: none;">
+                <label class="col-sm-2 control-label" for="input-rating-value">{{ entry_rating_value }}</label>
+                <div class="col-sm-10">
+                  <div class="input-group" style="max-width: 200px;">
+                    <input type="number" name="rating_value" value="{{ rating_value }}" 
+                           min="1" max="5" step="0.1" placeholder="4.5" 
+                           id="input-rating-value" class="form-control" />
+                    <span class="input-group-addon">из 5</span>
+                  </div>
+                  <div class="help-block">
+                    <small class="text-muted">{{ help_rating_value }}</small>
+                  </div>
+                </div>
+              </div>
+            </div>
             <div class="tab-pane" id="tab-blog">
               <div class="form-group">
                 <label class="col-sm-2 control-label" for="input-blog_category">{{ entry_blog_category }} <small>{{ help_blog_category }}</small></label>
@@ -283,9 +315,10 @@
   <script type="text/javascript" src="view/javascript/summernote/summernote-image-attributes.js"></script> 
   <script type="text/javascript" src="view/javascript/summernote/opencart.js"></script> 
   <script type="text/javascript"><!--
+// Инициализация языковых вкладок
 $('#language a:first').tab('show');
 
-// Initialize datetime picker
+// Инициализация datetime picker
 $('.datetime').datetimepicker({
     language: '{{ datepicker }}',
     pickTime: true
@@ -370,13 +403,117 @@ $('#information-author').delegate('.fa-minus-circle', 'click', function() {
     $(this).parent().remove();
 });
 
-// Сортировка авторов
-$('#information-author').sortable({
-    update: function(event, ui) {
-        $('#information-author div').each(function(index) {
-            $(this).find('input[name$="[sort_order]"]').val(index);
-        });
+// ========== УПРАВЛЕНИЕ ПОЛЕМ РЕЙТИНГА ==========
+// Используем jQuery для совместимости с остальным кодом OpenCart
+$(document).ready(function() {
+    console.log('DOM готов');
+    
+    function toggleRatingField() {
+        var schemaType = $('#input-schema-type').val();
+        console.log('Текущий тип разметки:', schemaType);
+        
+        if (schemaType === 'Review') {
+            console.log('Показываем поле рейтинга');
+            $('#rating-field').show();
+            $('#input-rating-value').prop('required', true);
+        } else {
+            console.log('Скрываем поле рейтинга');
+            $('#rating-field').hide();
+            $('#input-rating-value').prop('required', false);
+        }
     }
+    
+    // Инициализация при загрузке
+    toggleRatingField();
+    
+    // Обработчик изменения типа разметки
+    $('#input-schema-type').on('change', function() {
+        console.log('Тип разметки изменен на:', $(this).val());
+        toggleRatingField();
+    });
+    
+    // Валидация при отправке формы
+    $('#form-information').on('submit', function(e) {
+        if ($('#input-schema-type').val() === 'Review') {
+            var ratingValue = $('#input-rating-value').val();
+            
+            if (!ratingValue || ratingValue.trim() === '') {
+                alert('Для типа Review необходимо указать значение рейтинга');
+                $('#input-rating-value').focus();
+                e.preventDefault();
+                return false;
+            }
+            
+            var rating = parseFloat(ratingValue);
+            if (isNaN(rating) || rating < 1 || rating > 5) {
+                alert('Значение рейтинга должно быть числом от 1 до 5');
+                $('#input-rating-value').focus();
+                e.preventDefault();
+                return false;
+            }
+        }
+        return true;
+    });
+    
+    // Обновление при переключении вкладок
+    $('a[data-toggle="tab"]').on('shown.bs.tab', function(e) {
+        if ($(e.target).attr('href') === '#tab-schema') {
+            console.log('Переключились на вкладку микроразметки');
+            toggleRatingField();
+        }
+    });
 });
-//--></script></div>
+
+// Простой тест для проверки элементов
+setTimeout(function() {
+    console.log('Проверка элементов:');
+    console.log('input-schema-type:', $('#input-schema-type').length ? 'найден' : 'не найден');
+    console.log('rating-field:', $('#rating-field').length ? 'найден' : 'не найден');
+    console.log('Текущее значение:', $('#input-schema-type').val());
+}, 100);
+//--></script>
+
+<!-- Резервный код на чистом JavaScript -->
+<script>
+// Простой и надежный код для управления полем рейтинга
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM загружен, инициализируем поле рейтинга (резервный код)');
+    
+    var schemaSelect = document.getElementById('input-schema-type');
+    var ratingField = document.getElementById('rating-field');
+    var ratingInput = document.getElementById('input-rating-value');
+    
+    if (!schemaSelect || !ratingField) {
+        console.error('Не найдены необходимые элементы для управления рейтингом');
+        return;
+    }
+    
+    function updateRatingField() {
+        console.log('Обновление поля рейтинга, выбран тип:', schemaSelect.value);
+        
+        if (schemaSelect.value === 'Review') {
+            ratingField.style.display = 'block';
+            if (ratingInput) {
+                ratingInput.required = true;
+            }
+            console.log('Поле рейтинга показано');
+        } else {
+            ratingField.style.display = 'none';
+            if (ratingInput) {
+                ratingInput.required = false;
+            }
+            console.log('Поле рейтинга скрыто');
+        }
+    }
+    
+    // Инициализация при загрузке
+    updateRatingField();
+    
+    // Обработчик изменений
+    schemaSelect.addEventListener('change', updateRatingField);
+    
+    console.log('Резервный код управления рейтингом успешно инициализирован');
+});
+</script>
+</div>
 {{ footer }}

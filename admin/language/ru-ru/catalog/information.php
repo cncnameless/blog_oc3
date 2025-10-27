@@ -35,6 +35,12 @@ $_['tab_blog']              = 'Блог';
 $_['entry_blog_category']   = 'Категория блога';
 $_['help_blog_category']    = '(Автозаполнение)';
 
+// Новые поля для микроразметки
+$_['entry_schema_type']      = 'Тип разметки Schema.org';
+$_['entry_rating_value']     = 'Значение рейтинга';
+$_['help_schema_type']       = 'Выберите тип разметки для SEO';
+$_['help_rating_value']      = 'Только для типа Review. Значение от 1 до 5 (можно дробное: 4.5)';
+
 // Help
 $_['help_bottom']            = 'Выводить в списке информационных статей в подвале.';
 $_['help_no_index']          = 'При включении добавляет странице заголовок<br> HTTP - X-Robots-Tag: noindex';
@@ -59,3 +65,4 @@ $_['entry_name']             = 'Название статьи';
 $_['entry_blog_category']    = 'Категория блога';
 $_['text_enabled']           = 'Включено';
 $_['text_disabled']          = 'Отключено';
+?>

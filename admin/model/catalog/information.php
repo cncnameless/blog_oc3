@@ -6,7 +6,9 @@ class ModelCatalogInformation extends Model {
             bottom = '" . (isset($data['bottom']) ? (int)$data['bottom'] : 0) . "', 
             status = '" . (int)$data['status'] . "', 
             no_index = '" . (int)$data['no_index'] . "',
-            date_added = '" . $this->db->escape($data['date_added']) . "'");
+            date_added = '" . $this->db->escape($data['date_added']) . "',
+            schema_type = '" . $this->db->escape($data['schema_type']) . "',
+            rating_value = " . (isset($data['rating_value']) && $data['rating_value'] !== '' ? "'" . (float)$data['rating_value'] . "'" : "NULL"));
 
         $information_id = $this->db->getLastId();
 
@@ -90,6 +92,8 @@ class ModelCatalogInformation extends Model {
             status = '" . (int)$data['status'] . "', 
             no_index = '" . (int)$data['no_index'] . "',
             date_added = '" . $this->db->escape($data['date_added']) . "',
+            schema_type = '" . $this->db->escape($data['schema_type']) . "',
+            rating_value = " . (isset($data['rating_value']) && $data['rating_value'] !== '' ? "'" . (float)$data['rating_value'] . "'" : "NULL") . ",
             date_modified = NOW() 
             WHERE information_id = '" . (int)$information_id . "'");
 

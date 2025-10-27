@@ -97,8 +97,6 @@ CREATE TABLE IF NOT EXISTS `information_to_author` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
 -- === Упрощенное добавление полей в таблицу information ===
--- Используем простые проверки через хранимые процедуры для совместимости
-
 -- Создаем временную процедуру для добавления столбцов
 DELIMITER $$
 CREATE PROCEDURE AddColumnIfNotExists(
@@ -132,6 +130,8 @@ CALL AddColumnIfNotExists('information', 'viewed', 'int(5) NOT NULL DEFAULT 0');
 CALL AddColumnIfNotExists('information', 'reading_time', 'int(3) NOT NULL DEFAULT 0');
 CALL AddColumnIfNotExists('information', 'no_index', 'tinyint(1) NOT NULL DEFAULT 0');
 CALL AddColumnIfNotExists('information', 'image', 'varchar(255) DEFAULT NULL');
+CALL AddColumnIfNotExists('information', 'schema_type', 'VARCHAR(20) NOT NULL DEFAULT \"BlogPosting\"');
+CALL AddColumnIfNotExists('information', 'rating_value', 'DECIMAL(2,1) NULL DEFAULT NULL');
 
 -- Удаляем временную процедуру
 DROP PROCEDURE IF EXISTS AddColumnIfNotExists;
