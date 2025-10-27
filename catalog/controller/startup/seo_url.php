@@ -197,6 +197,13 @@ class ControllerStartupSeoUrl extends Controller {
 		if (isset($data['route'])) {
 			$route = $data['route'];
 
+			// ИСПРАВЛЕНО: Главная страница блога
+			if ($route == 'information/blog_category' && !isset($data['blog_category_id'])) {
+				$url = '/blog';
+				unset($data['route']);
+				return $this->buildFinalUrl($url_info, $url, $data, false, $route);
+			}
+
 			// ПЕРВОЕ: Обрабатываем страницу авторов (без author_id)
 			if ($route == 'information/author' && !isset($data['author_id'])) {
 				$url = '/blog/authors';
@@ -477,6 +484,19 @@ class ControllerStartupSeoUrl extends Controller {
 	private function rewriteBlogUrl($route, &$data) {
 		$url = '/blog';
 		
+		// ИСПРАВЛЕНО: Главная страница блога
+		if ($route == 'information/blog_category' && !isset($data['blog_category_id'])) {
+			unset($data['route']);
+			return $url;
+		}
+		
+		if ($route == 'information/author' && !isset($data['author_id'])) {
+			// Страница списка авторов
+			$url .= '/authors';
+			unset($data['route']);
+			return $url;
+		}
+
 		if ($route == 'information/author' && isset($data['author_id'])) {
 			// Страница конкретного автора
 			$keyword = $this->getKeyword('author_id=' . (int)$data['author_id']);

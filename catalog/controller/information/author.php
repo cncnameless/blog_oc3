@@ -16,6 +16,12 @@ class ControllerInformationAuthor extends Controller {
     }
 
     private function showAuthor($author_id) {
+        // Проверяем существование таблицы
+        $table_exists = $this->db->query("SHOW TABLES LIKE '" . DB_PREFIX . "article_author'");
+        if (!$table_exists->num_rows) {
+            return $this->load->controller('error/not_found');
+        }
+
         // Получаем информацию об авторе
         $author_info = $this->model_catalog_author->getAuthor($author_id);
 
@@ -26,8 +32,9 @@ class ControllerInformationAuthor extends Controller {
 
             $data['breadcrumbs'] = array();
 
+            // ИСПРАВЛЕНО: Иконка домика для главной страницы
             $data['breadcrumbs'][] = array(
-                'text' => $this->language->get('text_home'),
+                'text' => '<i class="fa fa-home"></i>',
                 'href' => $this->url->link('common/home')
             );
 
@@ -68,8 +75,15 @@ class ControllerInformationAuthor extends Controller {
                 'limit' => 20
             );
 
-            $article_total = $this->model_catalog_author->getTotalArticlesByAuthor($author_id);
-            $results = $this->model_catalog_author->getArticlesByAuthor($filter_data);
+            // ИСПРАВЛЕНО: Проверяем существование таблицы перед подсчетом
+            $info_to_author_table_exists = $this->db->query("SHOW TABLES LIKE '" . DB_PREFIX . "information_to_author'");
+            if ($info_to_author_table_exists->num_rows) {
+                $article_total = $this->model_catalog_author->getTotalArticlesByAuthor($author_id);
+                $results = $this->model_catalog_author->getArticlesByAuthor($filter_data);
+            } else {
+                $article_total = 0;
+                $results = array();
+            }
 
             foreach ($results as $result) {
                 if ($result['image'] && file_exists(DIR_IMAGE . $result['image'])) {
@@ -111,6 +125,7 @@ class ControllerInformationAuthor extends Controller {
             $data['text_authors'] = $this->language->get('text_authors');
             $data['text_articles_by_author'] = $this->language->get('text_articles_by_author');
             $data['text_author_bio'] = $this->language->get('text_author_bio');
+            $data['text_articles_count'] = $this->language->get('text_articles_count');
 
             $data['continue'] = $this->url->link('common/home');
 
@@ -130,8 +145,9 @@ class ControllerInformationAuthor extends Controller {
 
             $data['breadcrumbs'] = array();
 
+            // ИСПРАВЛЕНО: Иконка домика для главной страницы
             $data['breadcrumbs'][] = array(
-                'text' => $this->language->get('text_home'),
+                'text' => '<i class="fa fa-home"></i>',
                 'href' => $this->url->link('common/home')
             );
 
@@ -174,8 +190,9 @@ class ControllerInformationAuthor extends Controller {
         
         $data['breadcrumbs'] = array();
         
+        // ИСПРАВЛЕНО: Иконка домика для главной страницы
         $data['breadcrumbs'][] = array(
-            'text' => $this->language->get('text_home'),
+            'text' => '<i class="fa fa-home"></i>',
             'href' => $this->url->link('common/home')
         );
         

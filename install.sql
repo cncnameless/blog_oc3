@@ -97,17 +97,77 @@ CREATE TABLE IF NOT EXISTS `information_to_author` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
 -- === Упрощенное добавление полей в таблицу information ===
--- Просто добавляем столбцы - если они уже есть, будет ошибка, но она не критична
-ALTER TABLE `information` 
-ADD COLUMN `date_added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-ADD COLUMN `date_modified` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-ADD COLUMN `viewed` int(5) NOT NULL DEFAULT '0',
-ADD COLUMN `reading_time` int(3) NOT NULL DEFAULT '0',
-ADD COLUMN `no_index` tinyint(1) NOT NULL DEFAULT '0',
-ADD COLUMN `image` varchar(255) DEFAULT NULL;
+-- Используем простые проверки через хранимые процедуры для совместимости
 
--- === Создаем индекс для keyword ===
-CREATE INDEX `keyword` ON `blog_category_description` (`keyword`);
+-- Создаем временную процедуру для добавления столбцов
+DELIMITER $$
+CREATE PROCEDURE AddColumnIfNotExists(
+    IN tableName VARCHAR(64),
+    IN columnName VARCHAR(64),
+    IN columnDefinition TEXT
+)
+BEGIN
+    DECLARE column_exists INT;
+
+    SELECT COUNT(*)
+    INTO column_exists
+    FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE()
+    AND TABLE_NAME = tableName
+    AND COLUMN_NAME = columnName;
+
+    IF column_exists = 0 THEN
+        SET @sql = CONCAT('ALTER TABLE `', tableName, '` ADD COLUMN `', columnName, '` ', columnDefinition);
+        PREPARE stmt FROM @sql;
+        EXECUTE stmt;
+        DEALLOCATE PREPARE stmt;
+    END IF;
+END$$
+DELIMITER ;
+
+-- Добавляем столбцы
+CALL AddColumnIfNotExists('information', 'date_added', 'datetime NOT NULL DEFAULT CURRENT_TIMESTAMP');
+CALL AddColumnIfNotExists('information', 'date_modified', 'datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP');
+CALL AddColumnIfNotExists('information', 'viewed', 'int(5) NOT NULL DEFAULT 0');
+CALL AddColumnIfNotExists('information', 'reading_time', 'int(3) NOT NULL DEFAULT 0');
+CALL AddColumnIfNotExists('information', 'no_index', 'tinyint(1) NOT NULL DEFAULT 0');
+CALL AddColumnIfNotExists('information', 'image', 'varchar(255) DEFAULT NULL');
+
+-- Удаляем временную процедуру
+DROP PROCEDURE IF EXISTS AddColumnIfNotExists;
+
+-- Создаем временную процедуру для создания индексов
+DELIMITER $$
+CREATE PROCEDURE AddIndexIfNotExists(
+    IN tableName VARCHAR(64),
+    IN indexName VARCHAR(64),
+    IN indexColumns VARCHAR(255)
+)
+BEGIN
+    DECLARE index_exists INT;
+
+    SELECT COUNT(*)
+    INTO index_exists
+    FROM INFORMATION_SCHEMA.STATISTICS
+    WHERE TABLE_SCHEMA = DATABASE()
+    AND TABLE_NAME = tableName
+    AND INDEX_NAME = indexName;
+
+    IF index_exists = 0 THEN
+        SET @sql = CONCAT('CREATE INDEX `', indexName, '` ON `', tableName, '` (', indexColumns, ')');
+        PREPARE stmt FROM @sql;
+        EXECUTE stmt;
+        DEALLOCATE PREPARE stmt;
+    END IF;
+END$$
+DELIMITER ;
+
+-- Создаем индексы
+CALL AddIndexIfNotExists('blog_category_description', 'keyword', '`keyword`');
+CALL AddIndexIfNotExists('seo_url', 'query_author', '`query`(20)');
+
+-- Удаляем временную процедуру
+DROP PROCEDURE IF EXISTS AddIndexIfNotExists;
 
 -- === Добавляем layout для вывода категорий блога ===
 INSERT IGNORE INTO `layout` (`name`) VALUES ('Blog Category');
@@ -128,6 +188,7 @@ FROM `layout`
 WHERE `name` = 'Author Page';
 
 -- === Добавляем права доступа администратору ===
+-- Более безопасный способ добавления прав
 UPDATE `user_group` 
 SET `permission` = CONCAT(
   `permission`, 
@@ -151,6 +212,3 @@ DELETE FROM `seo_url` WHERE `query` = 'information/blog_category';
 INSERT IGNORE INTO `seo_url` (`store_id`, `language_id`, `query`, `keyword`) 
 SELECT 0, `language_id`, 'information/blog_category', 'blog' 
 FROM `language`;
-
--- === Создаем индекс для author_id в seo_url ===
-CREATE INDEX `query_author` ON `seo_url` (`query`(20));

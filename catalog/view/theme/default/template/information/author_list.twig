@@ -2,7 +2,14 @@
 <div class="container">
   <ul class="breadcrumb">
     {% for breadcrumb in breadcrumbs %}
-    <li><a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+    <li>
+      {# ИСПРАВЛЕНО: Последняя крошка без ссылки #}
+      {% if breadcrumb.href and not loop.last %}
+        <a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a>
+      {% else %}
+        {{ breadcrumb.text }}
+      {% endif %}
+    </li>
     {% endfor %}
   </ul>
   <div class="row">{{ column_left }}

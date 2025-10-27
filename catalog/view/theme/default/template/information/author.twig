@@ -3,10 +3,10 @@
   <ul class="breadcrumb">
     {% for breadcrumb in breadcrumbs %}
     <li>
-      {% if loop.last %}
-        {{ breadcrumb.text }}
-      {% else %}
+      {% if breadcrumb.href and not loop.last %}
         <a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a>
+      {% else %}
+        {{ breadcrumb.text }}
       {% endif %}
     </li>
     {% endfor %}
@@ -49,7 +49,10 @@
             {% endif %}
             
             <div class="author-stats" style="margin-bottom: 20px;">
-              <span class="badge" style="background: #4ab2f1; font-size: 16px; padding: 8px 16px;">{{ article_total }} {{ text_articles_count }}</span>
+              {# ИСПРАВЛЕНО: Форматирование количества статей #}
+              <span class="badge" style="background: #4ab2f1; font-size: 16px; padding: 8px 16px;">
+                {{ text_articles_count|format(article_total) }}
+              </span>
             </div>
           </div>
         </div>
