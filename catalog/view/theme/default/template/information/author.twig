@@ -1,4 +1,8 @@
 {{ header }}
+<script type="application/ld+json">
+{{ microdata|json_encode(constant('JSON_UNESCAPED_SLASHES') b-or constant('JSON_PRETTY_PRINT')) }}
+</script>
+
 <div id="information-author" class="container">
   <ul class="breadcrumb">
     {% for breadcrumb in breadcrumbs %}
@@ -49,7 +53,6 @@
             {% endif %}
             
             <div class="author-stats" style="margin-bottom: 20px;">
-              {# ИСПРАВЛЕНО: Форматирование количества статей #}
               <span class="badge" style="background: #4ab2f1; font-size: 16px; padding: 8px 16px;">
                 {{ text_articles_count|format(article_total) }}
               </span>

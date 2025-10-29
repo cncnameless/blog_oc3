@@ -146,6 +146,7 @@ SELECT 0, `language_id`, 'information/blog_category', 'blog' FROM `language`;
 
 -- === Добавляем колонки в information Каждый запрос нужно выполнить по отедльности в этом блоке===
 -- === ВСЕ ALTER TABLE команды запускать по одной, можно выделять и нажимать F5
+-- === Проверить таблицу командой DESCRIBE `information`;
 ALTER TABLE `information` ADD COLUMN `date_added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP;
 
 ALTER TABLE `information` ADD COLUMN `date_modified` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
@@ -161,3 +162,20 @@ ALTER TABLE `information` ADD COLUMN `image` varchar(255) DEFAULT NULL;
 ALTER TABLE `information` ADD COLUMN `schema_type` VARCHAR(20) NOT NULL DEFAULT 'BlogPosting';
 
 ALTER TABLE `information` ADD COLUMN `rating_value` DECIMAL(2,1) NULL DEFAULT NULL;
+
+-- Добавляем новые поля для микроразметки
+ALTER TABLE `article_author` 
+  ADD `company_employee` TINYINT(1) NOT NULL DEFAULT '0',
+  ADD `affiliation` VARCHAR(255) NOT NULL DEFAULT '',
+  ADD `knows_about` TEXT NOT NULL,
+  ADD `knows_language` TEXT NOT NULL,
+  ADD `same_as` TEXT NOT NULL;
+
+-- Обновляем существующие записи
+UPDATE `article_author` SET 
+  `company_employee` = 1,
+  `affiliation` = '',
+  `knows_about` = 'Opencart, SEO',
+  `knows_language` = 'Russian, English',
+  `same_as` = '[]'
+WHERE `author_id` > 0;

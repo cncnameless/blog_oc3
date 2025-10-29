@@ -364,6 +364,47 @@ class ControllerCatalogAuthor extends Controller {
             $data['image'] = '';
         }
 
+        // Новые поля для микроразметки
+        if (isset($this->request->post['company_employee'])) {
+            $data['company_employee'] = $this->request->post['company_employee'];
+        } elseif (!empty($author_info)) {
+            $data['company_employee'] = $author_info['company_employee'];
+        } else {
+            $data['company_employee'] = 0;
+        }
+
+        if (isset($this->request->post['affiliation'])) {
+            $data['affiliation'] = $this->request->post['affiliation'];
+        } elseif (!empty($author_info)) {
+            $data['affiliation'] = $author_info['affiliation'];
+        } else {
+            $data['affiliation'] = '';
+        }
+
+        if (isset($this->request->post['knows_about'])) {
+            $data['knows_about'] = $this->request->post['knows_about'];
+        } elseif (!empty($author_info)) {
+            $data['knows_about'] = $author_info['knows_about'];
+        } else {
+            $data['knows_about'] = '';
+        }
+
+        if (isset($this->request->post['knows_language'])) {
+            $data['knows_language'] = $this->request->post['knows_language'];
+        } elseif (!empty($author_info)) {
+            $data['knows_language'] = $author_info['knows_language'];
+        } else {
+            $data['knows_language'] = '';
+        }
+
+        if (isset($this->request->post['same_as'])) {
+            $data['same_as'] = $this->request->post['same_as'];
+        } elseif (!empty($author_info)) {
+            $data['same_as'] = $author_info['same_as'];
+        } else {
+            $data['same_as'] = '';
+        }
+
         $this->load->model('tool/image');
 
         if (isset($this->request->post['image']) && is_file(DIR_IMAGE . $this->request->post['image'])) {
