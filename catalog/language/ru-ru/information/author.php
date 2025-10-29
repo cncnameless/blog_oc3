@@ -24,4 +24,8 @@ $_['text_author_bio'] = 'Об авторе';
 // For authors list page
 $_['text_authors_meta_description'] = 'Познакомьтесь с нашими авторами - экспертами в своих областях. Читайте их статьи и узнавайте новое.';
 $_['text_authors_meta_keyword'] = 'авторы, эксперты, блог, статьи';
+
+// Schema.org микроразметка
+$_['text_schema_collection_page'] = 'Страница коллекции авторов';
+$_['text_schema_item_list'] = 'Список авторов';
 ?>

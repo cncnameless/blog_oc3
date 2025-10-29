@@ -30,7 +30,7 @@ class ControllerInformationAuthor extends Controller {
             $data['breadcrumbs'] = array();
 
             $data['breadcrumbs'][] = array(
-                'text' => '<i class="fa fa-home"></i>',
+                'text' => $this->language->get('text_home'),
                 'href' => $this->url->link('common/home')
             );
 
@@ -259,7 +259,7 @@ class ControllerInformationAuthor extends Controller {
             $data['breadcrumbs'] = array();
 
             $data['breadcrumbs'][] = array(
-                'text' => '<i class="fa fa-home"></i>',
+                'text' => $this->language->get('text_home'),
                 'href' => $this->url->link('common/home')
             );
 
@@ -303,7 +303,7 @@ class ControllerInformationAuthor extends Controller {
         $data['breadcrumbs'] = array();
         
         $data['breadcrumbs'][] = array(
-            'text' => '<i class="fa fa-home"></i>',
+            'text' => $this->language->get('text_home'),
             'href' => $this->url->link('common/home')
         );
         
@@ -321,10 +321,36 @@ class ControllerInformationAuthor extends Controller {
         $results = $this->model_catalog_author->getAllAuthors();
 
         foreach ($results as $result) {
+            // Получаем оригинальное изображение и его размеры
+            $image_width = 300;
+            $image_height = 300;
+            $image_original = '';
+            
             if ($result['image'] && file_exists(DIR_IMAGE . $result['image'])) {
                 $image = $this->model_tool_image->resize($result['image'], 300, 300);
+                $image_original = $this->config->get('config_url') . 'image/' . $result['image'];
+                $image_path = DIR_IMAGE . $result['image'];
+                
+                // Получаем реальные размеры оригинального изображения
+                if (file_exists($image_path)) {
+                    $image_info = getimagesize($image_path);
+                    if ($image_info) {
+                        $image_width = $image_info[0];
+                        $image_height = $image_info[1];
+                    }
+                }
             } else {
                 $image = $this->model_tool_image->resize('placeholder.png', 300, 300);
+                $image_original = $this->config->get('config_url') . 'image/placeholder.png';
+                $image_path = DIR_IMAGE . 'placeholder.png';
+                
+                if (file_exists($image_path)) {
+                    $image_info = getimagesize($image_path);
+                    if ($image_info) {
+                        $image_width = $image_info[0];
+                        $image_height = $image_info[1];
+                    }
+                }
             }
 
             $data['authors'][] = array(
@@ -332,11 +358,131 @@ class ControllerInformationAuthor extends Controller {
                 'name' => $result['name'],
                 'job_title' => $result['job_title'],
                 'image' => $image,
+                'image_original' => $image_original,
+                'image_width' => (int)$image_width,
+                'image_height' => (int)$image_height,
                 'bio' => utf8_substr(strip_tags(html_entity_decode($result['bio'], ENT_QUOTES, 'UTF-8')), 0, 200) . '..',
                 'total_articles' => $result['article_count'],
-                'href' => $this->url->link('information/author', 'author_id=' . $result['author_id'])
+                'href' => $this->url->link('information/author', 'author_id=' . $result['author_id']),
+                'knows_about' => $result['knows_about'] ? array_map('trim', explode(',', $result['knows_about'])) : array(),
+                'knows_language' => $result['knows_language'] ? array_map('trim', explode(',', $result['knows_language'])) : array(),
+                'same_as' => $result['same_as'] ? array_filter(array_map('trim', explode("\n", $result['same_as']))) : array()
             );
         }
+
+        // ===== МИКРОРАЗМЕТКА ДЛЯ СТРАНИЦЫ СПИСКА АВТОРОВ =====
+        $current_url = $this->url->link('information/author', '', true);
+        
+        // BreadcrumbList для навигационной цепочки - исправленная версия
+        $breadcrumbList = array();
+        $position = 1;
+        
+        // Главная страница
+        $breadcrumbList[] = array(
+            '@type' => 'ListItem',
+            'position' => $position++,
+            'name' => $this->language->get('text_home'),
+            'item' => $this->url->link('common/home')
+        );
+        
+        // Блог
+        $breadcrumbList[] = array(
+            '@type' => 'ListItem',
+            'position' => $position++,
+            'name' => $this->language->get('text_blog'),
+            'item' => $this->url->link('information/blog_category')
+        );
+        
+        // Авторы (текущая страница)
+        $breadcrumbList[] = array(
+            '@type' => 'ListItem',
+            'position' => $position++,
+            'name' => $this->language->get('text_authors'),
+            'item' => $current_url
+        );
+
+        // ItemList для списка авторов
+        $itemListElement = array();
+        $author_position = 1;
+        foreach ($data['authors'] as $author) {
+            // Формируем объект Person с правильным порядком полей
+            $person = array(
+                '@type' => 'Person',
+                '@id' => $author['href'] . '#person',
+                'name' => $author['name'],
+                'url' => $author['href']
+            );
+
+            // Добавляем description (обрезанный до 200 символов)
+            $clean_bio = strip_tags(html_entity_decode($author['bio'], ENT_QUOTES, 'UTF-8'));
+            if (!empty(trim($clean_bio))) {
+                $person['description'] = utf8_substr($clean_bio, 0, 200);
+            }
+
+            // Добавляем jobTitle если есть
+            if (!empty($author['job_title'])) {
+                $person['jobTitle'] = $author['job_title'];
+            }
+
+            // Добавляем image как ImageObject с оригинальным изображением и размерами
+            $person['image'] = array(
+                '@type' => 'ImageObject',
+                'url' => $author['image_original'], // Оригинальное изображение
+                'width' => $author['image_width'],   // Оригинальная ширина
+                'height' => $author['image_height']  // Оригинальная высота
+            );
+
+            // Добавляем knowsAbout если есть
+            if (!empty($author['knows_about'])) {
+                $person['knowsAbout'] = $author['knows_about'];
+            }
+
+            // Добавляем knowsLanguage если есть
+            if (!empty($author['knows_language'])) {
+                $person['knowsLanguage'] = $author['knows_language'];
+            }
+
+            // Добавляем sameAs если есть валидные URL
+            $valid_same_as = array();
+            if (!empty($author['same_as'])) {
+                foreach ($author['same_as'] as $url) {
+                    if (!empty($url) && filter_var($url, FILTER_VALIDATE_URL)) {
+                        $valid_same_as[] = $url;
+                    }
+                }
+                if (!empty($valid_same_as)) {
+                    $person['sameAs'] = $valid_same_as;
+                }
+            }
+
+            $itemListElement[] = array(
+                '@type' => 'ListItem',
+                'position' => $author_position++,
+                'item' => $person
+            );
+        }
+
+        // Основная микроразметка CollectionPage
+        $microdata = array(
+            '@context' => 'https://schema.org',
+            '@type' => array('CollectionPage', 'WebPage'),
+            '@id' => $current_url,
+            'name' => $data['heading_title'], // Берем из H1
+            'description' => $this->document->getDescription(),
+            'url' => $current_url,
+            'breadcrumb' => array(
+                '@type' => 'BreadcrumbList',
+                'itemListElement' => $breadcrumbList
+            ),
+            'mainEntity' => array(
+                '@type' => 'ItemList',
+                'numberOfItems' => count($data['authors']),
+                'itemListElement' => $itemListElement
+            )
+        );
+
+        $data['microdata'] = $microdata;
+        // ===== КОНЕЦ МИКРОРАЗМЕТКИ =====
 
         $data['heading_title'] = $this->language->get('heading_title');
         $data['text_no_authors'] = $this->language->get('text_no_authors');

@@ -1,9 +1,12 @@
 {{ header }}
+<script type="application/ld+json">
+{{ microdata|json_encode(constant('JSON_UNESCAPED_SLASHES') b-or constant('JSON_PRETTY_PRINT')) }}
+</script>
+
 <div class="container">
   <ul class="breadcrumb">
     {% for breadcrumb in breadcrumbs %}
     <li>
-      {# ИСПРАВЛЕНО: Последняя крошка без ссылки #}
       {% if breadcrumb.href and not loop.last %}
         <a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a>
       {% else %}
@@ -29,7 +32,11 @@
         <div class="col-lg-4 col-md-6 col-sm-6 col-xs-12">
           <div class="author-thumb">
             <div class="image">
-              <a href="{{ author.href }}"><img src="{{ author.image }}" alt="{{ author.name }}" title="{{ author.name }}" class="img-responsive" /></a>
+              <a href="{{ author.href }}">
+                <img src="{{ author.image }}" alt="{{ author.name }}" title="{{ author.name }}" 
+                     class="img-responsive" 
+                     style="width: 300px; height: 300px; object-fit: cover;" />
+              </a>
             </div>
             <div class="caption">
               <h4><a href="{{ author.href }}">{{ author.name }}</a></h4>
