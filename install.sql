@@ -2,6 +2,9 @@
 -- УСТАНОВКА МОДУЛЯ "Блог с авторами"
 -- ===============================
 
+-- Отключаем предупреждения о дублировании
+SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0;
+
 -- === Таблица категорий блога ===
 CREATE TABLE IF NOT EXISTS `blog_category` (
   `blog_category_id` int(11) NOT NULL AUTO_INCREMENT,
@@ -24,10 +27,11 @@ CREATE TABLE IF NOT EXISTS `blog_category_description` (
   `meta_description` varchar(1000) DEFAULT NULL,
   `meta_keyword` varchar(500) DEFAULT NULL,
   `keyword` varchar(255) DEFAULT NULL,
-  PRIMARY KEY (`blog_category_id`,`language_id`)
+  PRIMARY KEY (`blog_category_id`,`language_id`),
+  KEY `keyword` (`keyword`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
--- === Таблица путей категорий блога для иерархии ===
+-- === Таблица путей категорий ===
 CREATE TABLE IF NOT EXISTS `blog_category_path` (
   `blog_category_id` int(11) NOT NULL,
   `path_id` int(11) NOT NULL,
@@ -36,14 +40,14 @@ CREATE TABLE IF NOT EXISTS `blog_category_path` (
   KEY `path_id` (`path_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
--- === Привязка категорий блога к магазинам ===
+-- === Привязка категорий к магазинам ===
 CREATE TABLE IF NOT EXISTS `blog_category_to_store` (
   `blog_category_id` int(11) NOT NULL,
   `store_id` int(11) NOT NULL DEFAULT '0',
   PRIMARY KEY (`blog_category_id`,`store_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
--- === Основная таблица авторов ===
+-- === Таблица авторов ===
 CREATE TABLE IF NOT EXISTS `article_author` (
   `author_id` int(11) NOT NULL AUTO_INCREMENT,
   `image` varchar(255) DEFAULT NULL,
@@ -54,7 +58,7 @@ CREATE TABLE IF NOT EXISTS `article_author` (
   PRIMARY KEY (`author_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
--- === Описания авторов по языкам ===
+-- === Описания авторов ===
 CREATE TABLE IF NOT EXISTS `article_author_description` (
   `author_id` int(11) NOT NULL,
   `language_id` int(11) NOT NULL,
@@ -85,130 +89,75 @@ CREATE TABLE IF NOT EXISTS `information_to_blog_category` (
   KEY `blog_category_id` (`blog_category_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
--- === Связь статей с авторами (M2M) ===
+-- === Связь статей с авторами ===
 CREATE TABLE IF NOT EXISTS `information_to_author` (
   `information_id` int(11) NOT NULL,
   `author_id` int(11) NOT NULL,
   `sort_order` int(3) NOT NULL DEFAULT '0',
-  `is_primary` tinyint(1) DEFAULT '0' COMMENT 'Основной автор',
+  `is_primary` tinyint(1) DEFAULT '0',
   PRIMARY KEY (`information_id`,`author_id`),
   KEY `author_id` (`author_id`),
   KEY `is_primary` (`is_primary`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
--- === Упрощенное добавление полей в таблицу information ===
--- Создаем временную процедуру для добавления столбцов
-DELIMITER $$
-CREATE PROCEDURE AddColumnIfNotExists(
-    IN tableName VARCHAR(64),
-    IN columnName VARCHAR(64),
-    IN columnDefinition TEXT
-)
-BEGIN
-    DECLARE column_exists INT;
+-- === Индекс для seo_url ===
+CREATE INDEX `query_author` ON `seo_url` (`query`(20));
 
-    SELECT COUNT(*)
-    INTO column_exists
-    FROM INFORMATION_SCHEMA.COLUMNS
-    WHERE TABLE_SCHEMA = DATABASE()
-    AND TABLE_NAME = tableName
-    AND COLUMN_NAME = columnName;
+-- Включаем обратно предупреждения
+SET SQL_NOTES=@OLD_SQL_NOTES;
 
-    IF column_exists = 0 THEN
-        SET @sql = CONCAT('ALTER TABLE `', tableName, '` ADD COLUMN `', columnName, '` ', columnDefinition);
-        PREPARE stmt FROM @sql;
-        EXECUTE stmt;
-        DEALLOCATE PREPARE stmt;
-    END IF;
-END$$
-DELIMITER ;
-
--- Добавляем столбцы
-CALL AddColumnIfNotExists('information', 'date_added', 'datetime NOT NULL DEFAULT CURRENT_TIMESTAMP');
-CALL AddColumnIfNotExists('information', 'date_modified', 'datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP');
-CALL AddColumnIfNotExists('information', 'viewed', 'int(5) NOT NULL DEFAULT 0');
-CALL AddColumnIfNotExists('information', 'reading_time', 'int(3) NOT NULL DEFAULT 0');
-CALL AddColumnIfNotExists('information', 'no_index', 'tinyint(1) NOT NULL DEFAULT 0');
-CALL AddColumnIfNotExists('information', 'image', 'varchar(255) DEFAULT NULL');
-CALL AddColumnIfNotExists('information', 'schema_type', 'VARCHAR(20) NOT NULL DEFAULT \"BlogPosting\"');
-CALL AddColumnIfNotExists('information', 'rating_value', 'DECIMAL(2,1) NULL DEFAULT NULL');
-
--- Удаляем временную процедуру
-DROP PROCEDURE IF EXISTS AddColumnIfNotExists;
-
--- Создаем временную процедуру для создания индексов
-DELIMITER $$
-CREATE PROCEDURE AddIndexIfNotExists(
-    IN tableName VARCHAR(64),
-    IN indexName VARCHAR(64),
-    IN indexColumns VARCHAR(255)
-)
-BEGIN
-    DECLARE index_exists INT;
-
-    SELECT COUNT(*)
-    INTO index_exists
-    FROM INFORMATION_SCHEMA.STATISTICS
-    WHERE TABLE_SCHEMA = DATABASE()
-    AND TABLE_NAME = tableName
-    AND INDEX_NAME = indexName;
-
-    IF index_exists = 0 THEN
-        SET @sql = CONCAT('CREATE INDEX `', indexName, '` ON `', tableName, '` (', indexColumns, ')');
-        PREPARE stmt FROM @sql;
-        EXECUTE stmt;
-        DEALLOCATE PREPARE stmt;
-    END IF;
-END$$
-DELIMITER ;
-
--- Создаем индексы
-CALL AddIndexIfNotExists('blog_category_description', 'keyword', '`keyword`');
-CALL AddIndexIfNotExists('seo_url', 'query_author', '`query`(20)');
-
--- Удаляем временную процедуру
-DROP PROCEDURE IF EXISTS AddIndexIfNotExists;
-
--- === Добавляем layout для вывода категорий блога ===
+-- === Layouts ===
 INSERT IGNORE INTO `layout` (`name`) VALUES ('Blog Category');
-
--- === Добавляем layout для вывода страницы автора ===
 INSERT IGNORE INTO `layout` (`name`) VALUES ('Author Page');
 
--- === Привязываем маршрут для блога ===
+-- === Привязка маршрутов ===
 INSERT IGNORE INTO `layout_route` (`layout_id`, `store_id`, `route`)
 SELECT `layout_id`, 0, 'information/blog_category'
-FROM `layout`
-WHERE `name` = 'Blog Category';
+FROM `layout` WHERE `name` = 'Blog Category' LIMIT 1;
 
--- === Привязываем маршрут для авторов ===
 INSERT IGNORE INTO `layout_route` (`layout_id`, `store_id`, `route`)
 SELECT `layout_id`, 0, 'information/author'
-FROM `layout`
-WHERE `name` = 'Author Page';
+FROM `layout` WHERE `name` = 'Author Page' LIMIT 1;
 
--- === Добавляем права доступа администратору ===
--- Более безопасный способ добавления прав
+-- === Права администратору ===
 UPDATE `user_group` 
-SET `permission` = CONCAT(
-  `permission`, 
-  ',"access|catalog/blog_category","modify|catalog/blog_category","access|extension/module/blog_category","modify|extension/module/blog_category","access|catalog/author","modify|catalog/author"'
-)
+SET `permission` = JSON_ARRAY_APPEND(
+    JSON_ARRAY_APPEND(
+        JSON_ARRAY_APPEND(
+            JSON_ARRAY_APPEND(`permission`, '$', 'access|catalog/blog_category'),
+        '$', 'modify|catalog/blog_category'),
+    '$', 'access|catalog/author'),
+'$', 'modify|catalog/author')
 WHERE `name` = 'Administrator'
-AND `permission` NOT LIKE '%catalog/blog_category%';
+AND JSON_SEARCH(`permission`, 'one', 'access|catalog/blog_category') IS NULL;
 
--- === Добавляем модуль "Категории блога" в таблицу module ===
+-- === Модуль ===
 INSERT IGNORE INTO `module` (`name`, `code`, `setting`) 
 VALUES ('Категории блога', 'blog_category', '{"name":"Категории блога","status":"1"}');
 
--- === Добавляем настройки модуля ===
 INSERT IGNORE INTO `setting` (`store_id`, `code`, `key`, `value`, `serialized`) 
 VALUES (0, 'blog_category', 'blog_category_status', '1', 0);
 
--- === Удаляем старый маршрут из seo_url ===
+-- === SEO URL для блога ===
 DELETE FROM `seo_url` WHERE `query` = 'information/blog_category';
 
--- === Добавляем маршрут для категорий блога в seo_url (для каждой языковой версии) ===
 INSERT IGNORE INTO `seo_url` (`store_id`, `language_id`, `query`, `keyword`) 
-SELECT 0, `language_id`, 'information/blog_category', 'blog' 
-FROM `language`;
+SELECT 0, `language_id`, 'information/blog_category', 'blog' FROM `language`;
+
+-- === Добавляем колонки в information Каждый запрос нужно выполнить по отедльности в этом блоке===
+-- === ВСЕ ALTER TABLE команды запускать по одной, можно выделять и нажимать F5
+ALTER TABLE `information` ADD COLUMN `date_added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP;
+
+ALTER TABLE `information` ADD COLUMN `date_modified` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
+
+ALTER TABLE `information` ADD COLUMN `viewed` int(5) NOT NULL DEFAULT 0;
+
+ALTER TABLE `information` ADD COLUMN `reading_time` int(3) NOT NULL DEFAULT 0;
+
+ALTER TABLE `information` ADD COLUMN `no_index` tinyint(1) NOT NULL DEFAULT 0;
+
+ALTER TABLE `information` ADD COLUMN `image` varchar(255) DEFAULT NULL;
+
+ALTER TABLE `information` ADD COLUMN `schema_type` VARCHAR(20) NOT NULL DEFAULT 'BlogPosting';
+
+ALTER TABLE `information` ADD COLUMN `rating_value` DECIMAL(2,1) NULL DEFAULT NULL;
