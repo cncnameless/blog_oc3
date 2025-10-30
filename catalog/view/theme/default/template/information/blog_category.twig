@@ -2,9 +2,9 @@
 
 {# Микроразметка Schema.org #}
 {% if json_ld %}
-    {% for ld_item in json_ld %}
+    {% for key, ld_item in json_ld %}
     <script type="application/ld+json">
-    {{ ld_item|json_encode(constant('JSON_UNESCAPED_SLASHES') b-or constant('JSON_UNESCAPED_UNICODE'))|raw }}
+    {{ ld_item|json_encode(constant('JSON_UNESCAPED_SLASHES') b-or constant('JSON_UNESCAPED_UNICODE') b-or constant('JSON_PRETTY_PRINT')) }}
     </script>
     {% endfor %}
 {% endif %}
@@ -142,14 +142,16 @@
                   </a>
                 </div>
                 <div class="blog-info">
-                  <h4 itemprop="headline">
+                  <h4 itemprop="{{ article.schema_type == 'Organization' ? 'name' : 'headline' }}">
                     <a href="{{ article.href }}" itemprop="url">{{ article.title }}</a>
                   </h4>
                   <div class="blog-meta">
+                    {% if article.schema_type != 'Organization' %}
                     <span>
                       <i class="fa fa-calendar"></i> 
                       <time datetime="{{ article.date_added_iso }}" itemprop="datePublished">{{ article.date_added }}</time>
                     </span>
+                    {% endif %}
                     <span>
                       <i class="fa fa-eye"></i> {{ article.viewed }} {{ text_views }}
                     </span>
@@ -162,7 +164,7 @@
                   </p>
                   
                   {# Авторы #}
-                  {% if article.authors and article.schema_type != 'Review' %}
+                  {% if article.authors and article.schema_type != 'Review' and article.schema_type != 'Organization' %}
                   <div class="blog-authors">
                     <i class="fa fa-user"></i> 
                     {% for author in article.authors %}

@@ -313,102 +313,117 @@ class ControllerInformationBlogCategory extends Controller {
 
         $json_ld['breadcrumb'] = $breadcrumb_list;
 
-        // CollectionPage
-        $collection_page = [
+        // WebPage для страницы категории
+        $web_page = [
             '@context' => 'https://schema.org',
-            '@type' => 'CollectionPage',
+            '@type' => 'WebPage',
             'name' => $data['heading_title'],
             'url' => $current_url,
-            'mainContent' => [
-                '@type' => 'ItemList',
-                'itemListElement' => []
-            ]
+            'description' => isset($category_info['description']) ? $this->cleanTextForSchema(html_entity_decode($category_info['description'], ENT_QUOTES, 'UTF-8')) : '',
         ];
 
-        if ($category_info && !empty($category_info['description'])) {
-            $clean_description = $this->cleanTextForSchema(html_entity_decode($category_info['description'], ENT_QUOTES, 'UTF-8'));
-            $collection_page['description'] = $clean_description;
-        }
+        // ItemList для статей
+        $item_list = [
+            '@context' => 'https://schema.org',
+            '@type' => 'ItemList',
+            'name' => $data['heading_title'] . ' - Список статей',
+            'url' => $current_url,
+            'numberOfItems' => count($data['articles']),
+            'itemListElement' => []
+        ];
 
-        // ItemList
         foreach ($data['articles'] as $key => $article) {
-            $list_item = [
-                '@type' => 'ListItem',
-                'position' => $key + 1,
-                'item' => []
-            ];
-
             $article_type = $article['schema_type'];
             $clean_description = $this->cleanTextForSchema($article['full_description']);
             
-            $article_data = [
-                '@type' => $article_type,
-                'headline' => $article['title'],
-                'description' => $clean_description,
-                'datePublished' => $article['date_added_iso'],
-                'dateModified' => $article['date_modified_iso'],
-                'url' => $article['href'],
-                'mainEntityOfPage' => [
-                    '@type' => 'WebPage',
-                    '@id' => $article['href']
-                ]
-            ];
-
-            if ($article['image'] && $article['image'] != $this->model_tool_image->resize('placeholder.png', 400, 300)) {
-                $article_data['image'] = $article['image'];
-            }
-
-            // Авторы
-            if (!empty($article['authors_data'])) {
-                $authors = [];
-                foreach ($article['authors_data'] as $author) {
-                    $author_data = [
-                        '@type' => 'Person',
-                        'name' => $author['name']
-                    ];
-                    
-                    if (!empty($author['job_title'])) {
-                        $author_data['jobTitle'] = $author['job_title'];
-                    }
-                    
-                    if (!empty($author['href'])) {
-                        $author_data['url'] = $author['href'];
-                    }
-                    
-                    if (!empty($author['image']) && $author['image'] != $this->model_tool_image->resize('placeholder.png', 80, 80)) {
-                        $author_data['image'] = $author['image'];
-                    }
-                    
-                    $authors[] = $author_data;
-                }
-                
-                $article_data['author'] = count($authors) === 1 ? $authors[0] : $authors;
-            }
-
-            // Publisher для всех типов
-            $article_data['publisher'] = [
-                '@type' => 'Organization',
-                'name' => $this->config->get('config_name'),
-                'logo' => [
-                    '@type' => 'ImageObject',
-                    'url' => $base_url . 'image/' . $this->config->get('config_logo')
-                ]
-            ];
-
-            // Review rating
-            if ($article_type === 'Review' && $article['rating_value'] !== null) {
-                $article_data['reviewRating'] = [
-                    '@type' => 'Rating',
-                    'ratingValue' => $article['rating_value'],
-                    'bestRating' => '5'
+            // Раздельная логика для Organization и других типов
+            if ($article_type === 'Organization') {
+                // Для Organization используем правильные свойства
+                $article_data = [
+                    '@type' => $article_type,
+                    'name' => $article['title'], // используем name вместо headline
+                    'description' => $clean_description,
+                    'url' => $article['href']
                 ];
+                
+                // Для Organization не включаем даты публикации, так как они невалидны
+                // Также не включаем mainEntityOfPage и publisher для Organization
+                
+            } else {
+                // Для статей блога, новостей, обзоров
+                $article_data = [
+                    '@type' => $article_type,
+                    'headline' => $article['title'],
+                    'description' => $clean_description,
+                    'datePublished' => $article['date_added_iso'],
+                    'dateModified' => $article['date_modified_iso'],
+                    'url' => $article['href'],
+                    'mainEntityOfPage' => [
+                        '@type' => 'WebPage',
+                        '@id' => $article['href']
+                    ]
+                ];
+
+                if ($article['image'] && $article['image'] != $this->model_tool_image->resize('placeholder.png', 400, 300)) {
+                    $article_data['image'] = $article['image'];
+                }
+
+                // Авторы только для статей, новостей и обзоров
+                if (!empty($article['authors_data'])) {
+                    $authors = [];
+                    foreach ($article['authors_data'] as $author) {
+                        $author_data = [
+                            '@type' => 'Person',
+                            'name' => $author['name']
+                        ];
+                        
+                        if (!empty($author['job_title'])) {
+                            $author_data['jobTitle'] = $author['job_title'];
+                        }
+                        
+                        if (!empty($author['href'])) {
+                            $author_data['url'] = $author['href'];
+                        }
+                        
+                        if (!empty($author['image']) && $author['image'] != $this->model_tool_image->resize('placeholder.png', 80, 80)) {
+                            $author_data['image'] = $author['image'];
+                        }
+                        
+                        $authors[] = $author_data;
+                    }
+                    
+                    $article_data['author'] = count($authors) === 1 ? $authors[0] : $authors;
+                }
+
+                // Publisher для статей
+                $article_data['publisher'] = [
+                    '@type' => 'Organization',
+                    'name' => $this->config->get('config_name'),
+                    'logo' => [
+                        '@type' => 'ImageObject',
+                        'url' => $base_url . 'image/' . $this->config->get('config_logo')
+                    ]
+                ];
+
+                // Review rating только для обзоров
+                if ($article_type === 'Review' && $article['rating_value'] !== null) {
+                    $article_data['reviewRating'] = [
+                        '@type' => 'Rating',
+                        'ratingValue' => $article['rating_value'],
+                        'bestRating' => '5'
+                    ];
+                }
             }
 
-            $list_item['item'] = $article_data;
-            $collection_page['mainContent']['itemListElement'][] = $list_item;
+            $item_list['itemListElement'][] = [
+                '@type' => 'ListItem',
+                'position' => $key + 1,
+                'item' => $article_data
+            ];
         }
 
-        $json_ld['collection_page'] = $collection_page;
+        $json_ld['web_page'] = $web_page;
+        $json_ld['item_list'] = $item_list;
 
         return $json_ld;
     }
