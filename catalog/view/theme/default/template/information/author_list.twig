@@ -1,18 +1,8 @@
 {{ header }}
-<script type="application/ld+json">
-{{ microdata|json_encode(constant('JSON_UNESCAPED_SLASHES') b-or constant('JSON_PRETTY_PRINT')) }}
-</script>
-
 <div class="container">
   <ul class="breadcrumb">
     {% for breadcrumb in breadcrumbs %}
-    <li>
-      {% if breadcrumb.href and not loop.last %}
-        <a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a>
-      {% else %}
-        {{ breadcrumb.text }}
-      {% endif %}
-    </li>
+    <li><a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
     {% endfor %}
   </ul>
   <div class="row">{{ column_left }}
@@ -25,17 +15,19 @@
     {% endif %}
     <div id="content" class="{{ class }}">{{ content_top }}
       <h1>{{ heading_title }}</h1>
+      {% if description %}
+      <div class="author-list-description">{{ description }}</div>
+      <hr>
+      {% endif %}
       
       {% if authors %}
       <div class="row authors-list">
         {% for author in authors %}
-        <div class="col-lg-4 col-md-6 col-sm-6 col-xs-12">
-          <div class="author-thumb">
+        <div class="col-lg-4 col-md-4 col-sm-6">
+          <div class="author-thumb text-center">
             <div class="image">
               <a href="{{ author.href }}">
-                <img src="{{ author.image }}" alt="{{ author.name }}" title="{{ author.name }}" 
-                     class="img-responsive" 
-                     style="width: 300px; height: 300px; object-fit: cover;" />
+                <img src="{{ author.thumb }}" alt="{{ author.name }}" title="{{ author.name }}" class="img-responsive img-circle" />
               </a>
             </div>
             <div class="caption">
@@ -43,22 +35,19 @@
               {% if author.job_title %}
               <p class="job-title">{{ author.job_title }}</p>
               {% endif %}
+              {% if author.bio %}
               <p class="bio">{{ author.bio }}</p>
-              <div class="author-meta">
-                <span class="articles-count badge">{{ text_articles_count|format(author.total_articles) }}</span>
-              </div>
-              <a href="{{ author.href }}" class="btn btn-primary">{{ button_view_author }}</a>
+              {% endif %}
+              <p class="article-count">{{ text_article_count|format(author.article_count) }}</p>
+              <a href="{{ author.href }}" class="btn btn-primary">{{ text_all_authors }}</a>
             </div>
           </div>
         </div>
         {% endfor %}
       </div>
       {% else %}
-      <div class="text-center">
-        <p>{{ text_no_authors }}</p>
-      </div>
+      <p>Авторы не найдены.</p>
       {% endif %}
-      
       {{ content_bottom }}</div>
     {{ column_right }}</div>
 </div>

@@ -12,6 +12,14 @@ class ControllerInformationBlogCategory extends Controller {
             $author_model_loaded = true;
         }
 
+        // Получаем настройки размеров изображений из конфига модуля
+        $article_image_width = $this->config->get('blog_article_image_width') ?: 400;
+        $article_image_height = $this->config->get('blog_article_image_height') ?: 300;
+        $category_image_width = $this->config->get('blog_category_image_width') ?: 800;
+        $category_image_height = $this->config->get('blog_category_image_height') ?: 400;
+        $author_article_width = $this->config->get('blog_author_article_width') ?: 80;
+        $author_article_height = $this->config->get('blog_author_article_height') ?: 80;
+
         if (isset($this->request->get['blog_category_id'])) {
             $blog_category_id = (int)$this->request->get['blog_category_id'];
         } else {
@@ -38,7 +46,7 @@ class ControllerInformationBlogCategory extends Controller {
 
                 $data['heading_title'] = $category_info['name'];
                 $data['description'] = html_entity_decode($category_info['description'], ENT_QUOTES, 'UTF-8');
-                $data['thumb'] = $category_info['image'] ? $this->model_tool_image->resize($category_info['image'], 800, 400) : '';
+                $data['thumb'] = $category_info['image'] ? $this->model_tool_image->resize($category_info['image'], $category_image_width, $category_image_height) : '';
 
                 $data['breadcrumbs'][] = [
                     'text' => $this->language->get('text_blog'),
@@ -87,7 +95,7 @@ class ControllerInformationBlogCategory extends Controller {
                 $results = $this->model_catalog_information->getInformationsByBlogCategory($filter_data);
 
                 foreach ($results as $result) {
-                    $image = $this->model_tool_image->resize('placeholder.png', 400, 300);
+                    $image = $this->model_tool_image->resize('placeholder.png', $article_image_width, $article_image_height);
                     
                     $author_names = [];
                     $authors_data = [];
@@ -104,9 +112,9 @@ class ControllerInformationBlogCategory extends Controller {
                                 
                                 $author_image = '';
                                 if (!empty($author['image']) && file_exists(DIR_IMAGE . $author['image'])) {
-                                    $author_image = $this->model_tool_image->resize($author['image'], 80, 80);
+                                    $author_image = $this->model_tool_image->resize($author['image'], $author_article_width, $author_article_height);
                                 } else {
-                                    $author_image = $this->model_tool_image->resize('placeholder.png', 80, 80);
+                                    $author_image = $this->model_tool_image->resize('placeholder.png', $author_article_width, $author_article_height);
                                 }
                                 
                                 $authors_data[] = [
@@ -167,12 +175,23 @@ class ControllerInformationBlogCategory extends Controller {
                 return $this->load->controller('error/not_found');
             }
         } else {
-            // Главная блога
-            $this->document->setTitle($this->language->get('heading_title'));
-            $data['heading_title'] = $this->language->get('heading_title');
+            // Главная блога - получаем SEO данные из таблицы blog_home_description
+            $blog_home_data = $this->getBlogHomeData();
+            
+            $this->document->setTitle($blog_home_data['meta_title']);
+            $this->document->setDescription($blog_home_data['meta_description']);
+            $this->document->setKeywords($blog_home_data['meta_keyword']);
+            
+            if ($blog_home_data['h1']) {
+                $data['heading_title'] = $blog_home_data['h1'];
+            } else {
+                $data['heading_title'] = $blog_home_data['name'];
+            }
+            
+            $data['description'] = html_entity_decode($blog_home_data['description'], ENT_QUOTES, 'UTF-8');
             
             $data['breadcrumbs'][] = [
-                'text' => $this->language->get('text_blog'),
+                'text' => $blog_home_data['name'],
                 'href' => ''
             ];
 
@@ -202,7 +221,7 @@ class ControllerInformationBlogCategory extends Controller {
             $results = $this->model_catalog_information->getBlogArticles($filter_data);
 
             foreach ($results as $result) {
-                $image = $this->model_tool_image->resize('placeholder.png', 400, 300);
+                $image = $this->model_tool_image->resize('placeholder.png', $article_image_width, $article_image_height);
                 
                 $author_names = [];
                 $authors_data = [];
@@ -219,9 +238,9 @@ class ControllerInformationBlogCategory extends Controller {
                             
                             $author_image = '';
                             if (!empty($author['image']) && file_exists(DIR_IMAGE . $author['image'])) {
-                                $author_image = $this->model_tool_image->resize($author['image'], 80, 80);
+                                $author_image = $this->model_tool_image->resize($author['image'], $author_article_width, $author_article_height);
                             } else {
-                                $author_image = $this->model_tool_image->resize('placeholder.png', 80, 80);
+                                $author_image = $this->model_tool_image->resize('placeholder.png', $author_article_width, $author_article_height);
                             }
                             
                             $authors_data[] = [
@@ -279,7 +298,29 @@ class ControllerInformationBlogCategory extends Controller {
         }
     }
 
+    private function getBlogHomeData() {
+        $language_id = (int)$this->config->get('config_language_id');
+        
+        $query = $this->db->query("SELECT * FROM " . DB_PREFIX . "blog_home_description WHERE language_id = '" . $language_id . "'");
+        
+        if ($query->num_rows) {
+            return $query->row;
+        }
+        
+        // Возвращаем данные по умолчанию
+        return array(
+            'name' => 'Блог',
+            'h1' => 'Блог',
+            'meta_title' => 'Блог',
+            'meta_description' => '',
+            'meta_keyword' => '',
+            'description' => ''
+        );
+    }
+
+    // Остальные методы (generateSchemaMarkup, cleanTextForSchema, getCurrentUrl, getAbsoluteUrl) остаются без изменений
     private function generateSchemaMarkup($data, $category_info = null, $blog_category_id = 0) {
+        // ... существующий код без изменений ...
         $json_ld = [];
         $base_url = HTTP_SERVER;
         $current_url = $this->getCurrentUrl($blog_category_id);
@@ -364,7 +405,7 @@ class ControllerInformationBlogCategory extends Controller {
                     ]
                 ];
 
-                if ($article['image'] && $article['image'] != $this->model_tool_image->resize('placeholder.png', 400, 300)) {
+                if ($article['image'] && $article['image'] != $this->model_tool_image->resize('placeholder.png', $this->config->get('blog_article_image_width') ?: 400, $this->config->get('blog_article_image_height') ?: 300)) {
                     $article_data['image'] = $article['image'];
                 }
 
@@ -385,7 +426,7 @@ class ControllerInformationBlogCategory extends Controller {
                             $author_data['url'] = $author['href'];
                         }
                         
-                        if (!empty($author['image']) && $author['image'] != $this->model_tool_image->resize('placeholder.png', 80, 80)) {
+                        if (!empty($author['image']) && $author['image'] != $this->model_tool_image->resize('placeholder.png', $this->config->get('blog_author_article_width') ?: 80, $this->config->get('blog_author_article_height') ?: 80)) {
                             $author_data['image'] = $author['image'];
                         }
                         

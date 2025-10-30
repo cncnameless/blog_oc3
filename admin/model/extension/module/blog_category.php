@@ -107,7 +107,34 @@ class ModelExtensionModuleBlogCategory extends Model {
             ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci
         ");
 
-        // Проверяем и добавляем все необходимые колонки в information
+        // НОВЫЕ ТАБЛИЦЫ ДЛЯ SEO
+        $this->db->query("
+            CREATE TABLE IF NOT EXISTS `" . DB_PREFIX . "blog_home_description` (
+                `language_id` int(11) NOT NULL,
+                `name` varchar(255) NOT NULL,
+                `h1` varchar(255) NOT NULL,
+                `meta_title` varchar(255) NOT NULL,
+                `meta_description` varchar(1000) DEFAULT NULL,
+                `meta_keyword` varchar(500) DEFAULT NULL,
+                `description` text,
+                PRIMARY KEY (`language_id`)
+            ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci
+        ");
+
+        $this->db->query("
+            CREATE TABLE IF NOT EXISTS `" . DB_PREFIX . "author_list_description` (
+                `language_id` int(11) NOT NULL,
+                `name` varchar(255) NOT NULL,
+                `h1` varchar(255) NOT NULL,
+                `meta_title` varchar(255) NOT NULL,
+                `meta_description` varchar(1000) DEFAULT NULL,
+                `meta_keyword` varchar(500) DEFAULT NULL,
+                `description` text,
+                PRIMARY KEY (`language_id`)
+            ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci
+        ");
+
+        // Проверяем и добавляем необходимые колонки в information
         $columns_to_add = [
             'date_added' => "ALTER TABLE `" . DB_PREFIX . "information` ADD COLUMN `date_added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP",
             'date_modified' => "ALTER TABLE `" . DB_PREFIX . "information` ADD COLUMN `date_modified` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
@@ -129,21 +156,15 @@ class ModelExtensionModuleBlogCategory extends Model {
 
         // Добавляем базовые настройки
         $this->addBasicSettings();
+        
+        // Добавляем начальные данные для SEO
+        $this->addInitialSeoData();
     }
 
     public function uninstall() {
-        // Удаляем таблицы
-        $this->db->query("DROP TABLE IF EXISTS `" . DB_PREFIX . "blog_category`");
-        $this->db->query("DROP TABLE IF EXISTS `" . DB_PREFIX . "blog_category_description`");
-        $this->db->query("DROP TABLE IF EXISTS `" . DB_PREFIX . "blog_category_path`");
-        $this->db->query("DROP TABLE IF EXISTS `" . DB_PREFIX . "blog_category_to_store`");
-        $this->db->query("DROP TABLE IF EXISTS `" . DB_PREFIX . "article_author`");
-        $this->db->query("DROP TABLE IF EXISTS `" . DB_PREFIX . "article_author_description`");
-        $this->db->query("DROP TABLE IF EXISTS `" . DB_PREFIX . "article_author_to_store`");
-        $this->db->query("DROP TABLE IF EXISTS `" . DB_PREFIX . "information_to_blog_category`");
-        $this->db->query("DROP TABLE IF EXISTS `" . DB_PREFIX . "information_to_author`");
-
-        // Удаляем настройки модуля
+        // Не удаляем таблицы при деинсталляции, так как они могут содержать данные
+        // Удаляем только настройки модуля
+        
         $this->db->query("DELETE FROM `" . DB_PREFIX . "module` WHERE `code` = 'blog_category'");
         $this->db->query("DELETE FROM `" . DB_PREFIX . "setting` WHERE `code` = 'blog_category'");
     }
@@ -152,13 +173,63 @@ class ModelExtensionModuleBlogCategory extends Model {
         // Добавляем модуль в таблицу module если его нет
         $query = $this->db->query("SELECT * FROM `" . DB_PREFIX . "module` WHERE `code` = 'blog_category'");
         if (!$query->num_rows) {
-            $this->db->query("INSERT INTO `" . DB_PREFIX . "module` (`name`, `code`, `setting`) VALUES ('Категории блога', 'blog_category', '{\"name\":\"Категории блога\",\"status\":\"1\"}')");
+            $this->db->query("INSERT INTO `" . DB_PREFIX . "module` (`name`, `code`, `setting`) VALUES ('Блог', 'blog_category', '{\"name\":\"Блог\",\"status\":\"1\"}')");
         }
 
         // Добавляем настройки модуля если их нет
-        $query = $this->db->query("SELECT * FROM `" . DB_PREFIX . "setting` WHERE `code` = 'blog_category' AND `key` = 'blog_category_status'");
-        if (!$query->num_rows) {
-            $this->db->query("INSERT INTO `" . DB_PREFIX . "setting` (`store_id`, `code`, `key`, `value`, `serialized`) VALUES (0, 'blog_category', 'blog_category_status', '1', 0)");
+        $settings_to_add = [
+            'blog_category_status' => '1',
+            'blog_author_article_width' => '80',
+            'blog_author_article_height' => '80',
+            'blog_author_page_width' => '400',
+            'blog_author_page_height' => '400',
+            'blog_author_list_image_width' => '300',
+            'blog_author_list_image_height' => '300',
+            'blog_article_image_width' => '400',
+            'blog_article_image_height' => '300',
+            'blog_category_image_width' => '800',
+            'blog_category_image_height' => '400'
+        ];
+
+        foreach ($settings_to_add as $key => $value) {
+            $query = $this->db->query("SELECT * FROM `" . DB_PREFIX . "setting` WHERE `code` = 'blog_category' AND `key` = '" . $key . "'");
+            if (!$query->num_rows) {
+                $this->db->query("INSERT INTO `" . DB_PREFIX . "setting` (`store_id`, `code`, `key`, `value`, `serialized`) VALUES (0, 'blog_category', '" . $key . "', '" . $value . "', 0)");
+            }
+        }
+    }
+    
+    private function addInitialSeoData() {
+        // Добавляем начальные данные для SEO главной блога
+        $languages = $this->db->query("SELECT language_id FROM " . DB_PREFIX . "language");
+        foreach ($languages->rows as $language) {
+            $query = $this->db->query("SELECT * FROM " . DB_PREFIX . "blog_home_description WHERE language_id = '" . (int)$language['language_id'] . "'");
+            if (!$query->num_rows) {
+                $this->db->query("INSERT INTO " . DB_PREFIX . "blog_home_description SET 
+                    language_id = '" . (int)$language['language_id'] . "',
+                    name = 'Блог',
+                    h1 = 'Блог', 
+                    meta_title = 'Блог',
+                    meta_description = 'Читайте интересные статьи и новости в нашем блоге',
+                    meta_keyword = 'блог, статьи, новости',
+                    description = 'Добро пожаловать в наш блог!'");
+            }
+        }
+        
+        // Добавляем начальные данные для SEO списка авторов
+        foreach ($languages->rows as $language) {
+            $query = $this->db->query("SELECT * FROM " . DB_PREFIX . "author_list_description WHERE language_id = '" . (int)$language['language_id'] . "'");
+            if (!$query->num_rows) {
+                $this->db->query("INSERT INTO " . DB_PREFIX . "author_list_description SET 
+                    language_id = '" . (int)$language['language_id'] . "',
+                    name = 'Авторы',
+                    h1 = 'Наши авторы',
+                    meta_title = 'Авторы',
+                    meta_description = 'Познакомьтесь с нашими авторами - экспертами в своей области',
+                    meta_keyword = 'авторы, эксперты, блог',
+                    description = 'Наша команда авторов'");
+            }
         }
     }
 }
+?>

@@ -120,10 +120,10 @@ class ControllerCommonColumnLeft extends Controller {
 				);
 			}
 
-			// Blog
+			// Blog - ОБНОВЛЕННЫЙ РАЗДЕЛ
 			$blog = array();
 
-			// === ДОБАВЛЯЕМ ПУНКТ ДЛЯ СТАТЕЙ ===
+			// Статьи
 			if ($this->user->hasPermission('access', 'catalog/information')) {
 				$blog[] = array(
 					'name'     => 'Статьи',
@@ -131,8 +131,8 @@ class ControllerCommonColumnLeft extends Controller {
 					'children' => array()
 				);
 			}
-			// === КОНЕЦ БЛОКА ===
 
+			// Категории блога
 			if ($this->user->hasPermission('access', 'catalog/blog_category')) {
 				$blog[] = array(
 					'name'     => 'Категории блога',
@@ -141,7 +141,7 @@ class ControllerCommonColumnLeft extends Controller {
 				);
 			}
 
-			// === ДОБАВЛЯЕМ ПУНКТ ДЛЯ АВТОРОВ ===
+			// Авторы статей
 			if ($this->user->hasPermission('access', 'catalog/author')) {
 				$blog[] = array(
 					'name'     => 'Авторы статей',
@@ -149,7 +149,6 @@ class ControllerCommonColumnLeft extends Controller {
 					'children' => array()
 				);
 			}
-			// === КОНЕЦ БЛОКА ===
 
 			if ($blog) {
 				$data['menus'][] = array(

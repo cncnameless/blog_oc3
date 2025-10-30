@@ -377,5 +377,36 @@ class ModelCatalogInformation extends Model {
         $query = $this->db->query("SELECT * FROM " . DB_PREFIX . "information_to_author WHERE information_id = '" . (int)$information_id . "' ORDER BY is_primary DESC, sort_order ASC");
         return $query->rows;
     }
+
+    // Добавляем эти методы в конец класса ModelCatalogInformation
+
+public function getBlogArticles($data = array()) {
+    $sql = "SELECT * FROM " . DB_PREFIX . "information i 
+            LEFT JOIN " . DB_PREFIX . "information_description id ON (i.information_id = id.information_id) 
+            WHERE id.language_id = '" . (int)$this->config->get('config_language_id') . "' 
+            AND i.status = '1'";
+
+    $sql .= " ORDER BY i.date_added DESC";
+
+    if (isset($data['start']) || isset($data['limit'])) {
+        if ($data['start'] < 0) {
+            $data['start'] = 0;
+        }
+
+        if ($data['limit'] < 1) {
+            $data['limit'] = 20;
+        }
+
+        $sql .= " LIMIT " . (int)$data['start'] . "," . (int)$data['limit'];
+    }
+
+    $query = $this->db->query($sql);
+    return $query->rows;
+}
+
+public function getTotalBlogArticles() {
+    $query = $this->db->query("SELECT COUNT(*) AS total FROM " . DB_PREFIX . "information WHERE status = '1'");
+    return $query->row['total'];
+}
 }
 ?>

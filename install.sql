@@ -1,5 +1,6 @@
 -- ===============================
--- УСТАНОВКА МОДУЛЯ "Блог с авторами"
+-- УСТАНОВКА МОДУЛЯ "БЛОГ" 
+-- Полная установка на чистую БД
 -- ===============================
 
 -- Отключаем предупреждения о дублировании
@@ -55,6 +56,11 @@ CREATE TABLE IF NOT EXISTS `article_author` (
   `status` tinyint(1) NOT NULL DEFAULT '1',
   `date_added` datetime NOT NULL,
   `date_modified` datetime NOT NULL,
+  `company_employee` TINYINT(1) NOT NULL DEFAULT '0',
+  `affiliation` VARCHAR(255) NOT NULL DEFAULT '',
+  `knows_about` TEXT NOT NULL,
+  `knows_language` TEXT NOT NULL,
+  `same_as` TEXT NOT NULL,
   PRIMARY KEY (`author_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
@@ -100,11 +106,42 @@ CREATE TABLE IF NOT EXISTS `information_to_author` (
   KEY `is_primary` (`is_primary`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
--- === Индекс для seo_url ===
-CREATE INDEX `query_author` ON `seo_url` (`query`(20));
+-- === Таблица для SEO данных главной страницы блога ===
+CREATE TABLE IF NOT EXISTS `blog_home_description` (
+  `language_id` int(11) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `h1` varchar(255) NOT NULL,
+  `meta_title` varchar(255) NOT NULL,
+  `meta_description` varchar(1000) DEFAULT NULL,
+  `meta_keyword` varchar(500) DEFAULT NULL,
+  `description` text,
+  PRIMARY KEY (`language_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
--- Включаем обратно предупреждения
-SET SQL_NOTES=@OLD_SQL_NOTES;
+-- === Таблица для SEO данных страницы списка авторов ===
+CREATE TABLE IF NOT EXISTS `author_list_description` (
+  `language_id` int(11) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `h1` varchar(255) NOT NULL,
+  `meta_title` varchar(255) NOT NULL,
+  `meta_description` varchar(1000) DEFAULT NULL,
+  `meta_keyword` varchar(500) DEFAULT NULL,
+  `description` text,
+  PRIMARY KEY (`language_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+
+-- === Индекс для seo_url ===
+CREATE INDEX IF NOT EXISTS `query_author` ON `seo_url` (`query`(20));
+
+-- === Добавляем колонки в information ===
+ALTER TABLE `information` ADD COLUMN IF NOT EXISTS `date_added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP;
+ALTER TABLE `information` ADD COLUMN IF NOT EXISTS `date_modified` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
+ALTER TABLE `information` ADD COLUMN IF NOT EXISTS `viewed` int(5) NOT NULL DEFAULT 0;
+ALTER TABLE `information` ADD COLUMN IF NOT EXISTS `reading_time` int(3) NOT NULL DEFAULT 0;
+ALTER TABLE `information` ADD COLUMN IF NOT EXISTS `no_index` tinyint(1) NOT NULL DEFAULT 0;
+ALTER TABLE `information` ADD COLUMN IF NOT EXISTS `image` varchar(255) DEFAULT NULL;
+ALTER TABLE `information` ADD COLUMN IF NOT EXISTS `schema_type` VARCHAR(20) NOT NULL DEFAULT 'BlogPosting';
+ALTER TABLE `information` ADD COLUMN IF NOT EXISTS `rating_value` DECIMAL(2,1) NULL DEFAULT NULL;
 
 -- === Layouts ===
 INSERT IGNORE INTO `layout` (`name`) VALUES ('Blog Category');
@@ -120,23 +157,46 @@ SELECT `layout_id`, 0, 'information/author'
 FROM `layout` WHERE `name` = 'Author Page' LIMIT 1;
 
 -- === Права администратору ===
+-- Обновляем права для группы Administrator
 UPDATE `user_group` 
 SET `permission` = JSON_ARRAY_APPEND(
     JSON_ARRAY_APPEND(
         JSON_ARRAY_APPEND(
-            JSON_ARRAY_APPEND(`permission`, '$', 'access|catalog/blog_category'),
-        '$', 'modify|catalog/blog_category'),
-    '$', 'access|catalog/author'),
-'$', 'modify|catalog/author')
+            JSON_ARRAY_APPEND(
+                COALESCE(`permission`, JSON_ARRAY()), 
+                '$', 'access|catalog/blog_category'
+            ),
+            '$', 'modify|catalog/blog_category'
+        ),
+        '$', 'access|catalog/author'
+    ),
+    '$', 'modify|catalog/author'
+)
 WHERE `name` = 'Administrator'
-AND JSON_SEARCH(`permission`, 'one', 'access|catalog/blog_category') IS NULL;
+AND (
+    JSON_SEARCH(`permission`, 'one', 'access|catalog/blog_category') IS NULL OR
+    JSON_SEARCH(`permission`, 'one', 'modify|catalog/blog_category') IS NULL OR
+    JSON_SEARCH(`permission`, 'one', 'access|catalog/author') IS NULL OR
+    JSON_SEARCH(`permission`, 'one', 'modify|catalog/author') IS NULL
+);
 
 -- === Модуль ===
 INSERT IGNORE INTO `module` (`name`, `code`, `setting`) 
-VALUES ('Категории блога', 'blog_category', '{"name":"Категории блога","status":"1"}');
+VALUES ('Блог', 'blog_category', '{"name":"Блог","status":"1"}');
 
-INSERT IGNORE INTO `setting` (`store_id`, `code`, `key`, `value`, `serialized`) 
-VALUES (0, 'blog_category', 'blog_category_status', '1', 0);
+-- === Настройки модуля ===
+INSERT IGNORE INTO `setting` (`store_id`, `code`, `key`, `value`, `serialized`) VALUES 
+(0, 'blog_category', 'blog_category_status', '1', 0),
+(0, 'blog_category', 'blog_author_article_width', '80', 0),
+(0, 'blog_category', 'blog_author_article_height', '80', 0),
+(0, 'blog_category', 'blog_author_page_width', '400', 0),
+(0, 'blog_category', 'blog_author_page_height', '400', 0),
+(0, 'blog_category', 'blog_author_list_image_width', '300', 0),
+(0, 'blog_category', 'blog_author_list_image_height', '300', 0),
+(0, 'blog_category', 'blog_article_image_width', '400', 0),
+(0, 'blog_category', 'blog_article_image_height', '300', 0),
+(0, 'blog_category', 'blog_category_image_width', '800', 0),
+(0, 'blog_category', 'blog_category_image_height', '400', 0);
 
 -- === SEO URL для блога ===
 DELETE FROM `seo_url` WHERE `query` = 'information/blog_category';
@@ -144,38 +204,18 @@ DELETE FROM `seo_url` WHERE `query` = 'information/blog_category';
 INSERT IGNORE INTO `seo_url` (`store_id`, `language_id`, `query`, `keyword`) 
 SELECT 0, `language_id`, 'information/blog_category', 'blog' FROM `language`;
 
--- === Добавляем колонки в information Каждый запрос нужно выполнить по отедльности в этом блоке===
--- === ВСЕ ALTER TABLE команды запускать по одной, можно выделять и нажимать F5
--- === Проверить таблицу командой DESCRIBE `information`;
-ALTER TABLE `information` ADD COLUMN `date_added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP;
+-- === Начальные данные для SEO ===
+INSERT IGNORE INTO `blog_home_description` (`language_id`, `name`, `h1`, `meta_title`, `meta_description`, `meta_keyword`, `description`) 
+SELECT `language_id`, 'Блог', 'Блог', 'Блог', 'Читайте интересные статьи и новости в нашем блоге', 'блог, статьи, новости', 'Добро пожаловать в наш блог!' 
+FROM `language`;
 
-ALTER TABLE `information` ADD COLUMN `date_modified` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
+INSERT IGNORE INTO `author_list_description` (`language_id`, `name`, `h1`, `meta_title`, `meta_description`, `meta_keyword`, `description`) 
+SELECT `language_id`, 'Авторы', 'Наши авторы', 'Авторы', 'Познакомьтесь с нашими авторами - экспертами в своей области', 'авторы, эксперты, блог', 'Наша команда авторов' 
+FROM `language`;
 
-ALTER TABLE `information` ADD COLUMN `viewed` int(5) NOT NULL DEFAULT 0;
+-- Включаем обратно предупреждения
+SET SQL_NOTES=@OLD_SQL_NOTES;
 
-ALTER TABLE `information` ADD COLUMN `reading_time` int(3) NOT NULL DEFAULT 0;
-
-ALTER TABLE `information` ADD COLUMN `no_index` tinyint(1) NOT NULL DEFAULT 0;
-
-ALTER TABLE `information` ADD COLUMN `image` varchar(255) DEFAULT NULL;
-
-ALTER TABLE `information` ADD COLUMN `schema_type` VARCHAR(20) NOT NULL DEFAULT 'BlogPosting';
-
-ALTER TABLE `information` ADD COLUMN `rating_value` DECIMAL(2,1) NULL DEFAULT NULL;
-
--- Добавляем новые поля для микроразметки
-ALTER TABLE `article_author` 
-  ADD `company_employee` TINYINT(1) NOT NULL DEFAULT '0',
-  ADD `affiliation` VARCHAR(255) NOT NULL DEFAULT '',
-  ADD `knows_about` TEXT NOT NULL,
-  ADD `knows_language` TEXT NOT NULL,
-  ADD `same_as` TEXT NOT NULL;
-
--- Обновляем существующие записи
-UPDATE `article_author` SET 
-  `company_employee` = 1,
-  `affiliation` = '',
-  `knows_about` = 'Opencart, SEO',
-  `knows_language` = 'Russian, English',
-  `same_as` = '[]'
-WHERE `author_id` > 0;
+-- ===============================
+-- КОНЕЦ УСТАНОВКИ
+-- ===============================

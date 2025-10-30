@@ -7,14 +7,22 @@ class ControllerInformationAuthor extends Controller {
         $this->load->model('catalog/information');
         $this->load->model('tool/image');
 
+        // Получаем настройки размеров изображений из конфига модуля
+        $author_page_width = $this->config->get('blog_author_page_width') ?: 400;
+        $author_page_height = $this->config->get('blog_author_page_height') ?: 400;
+        $author_list_width = $this->config->get('blog_author_list_image_width') ?: 300;
+        $author_list_height = $this->config->get('blog_author_list_image_height') ?: 300;
+        $article_image_width = $this->config->get('blog_article_image_width') ?: 400;
+        $article_image_height = $this->config->get('blog_article_image_height') ?: 300;
+
         if (isset($this->request->get['author_id'])) {
-            $this->showAuthor((int)$this->request->get['author_id']);
+            $this->showAuthor((int)$this->request->get['author_id'], $author_page_width, $author_page_height, $article_image_width, $article_image_height);
         } else {
-            $this->showAuthorsList();
+            $this->showAuthorsList($author_list_width, $author_list_height);
         }
     }
 
-    private function showAuthor($author_id) {
+    private function showAuthor($author_id, $author_page_width, $author_page_height, $article_image_width, $article_image_height) {
         $table_exists = $this->db->query("SHOW TABLES LIKE '" . DB_PREFIX . "article_author'");
         if (!$table_exists->num_rows) {
             return $this->load->controller('error/not_found');
@@ -39,8 +47,10 @@ class ControllerInformationAuthor extends Controller {
                 'href' => $this->url->link('information/blog_category')
             );
 
+            // Получаем SEO данные для списка авторов
+            $author_list_data = $this->getAuthorListData();
             $data['breadcrumbs'][] = array(
-                'text' => $this->language->get('text_authors'),
+                'text' => $author_list_data['name'],
                 'href' => $this->url->link('information/author')
             );
 
@@ -54,13 +64,13 @@ class ControllerInformationAuthor extends Controller {
             $data['job_title'] = $author_info['job_title'];
             $data['bio'] = html_entity_decode($author_info['bio'], ENT_QUOTES, 'UTF-8');
 
-            // Обработка изображения автора с получением реальных размеров
-            $image_width = 400;
-            $image_height = 400;
+            // Обработка изображения автора с использованием настроек
+            $image_width = $author_page_width;
+            $image_height = $author_page_height;
             $data['image_original'] = '';
             
             if ($author_info['image'] && file_exists(DIR_IMAGE . $author_info['image'])) {
-                $data['image'] = $this->model_tool_image->resize($author_info['image'], 400, 400);
+                $data['image'] = $this->model_tool_image->resize($author_info['image'], $author_page_width, $author_page_height);
                 $data['image_original'] = $this->config->get('config_url') . 'image/' . $author_info['image'];
                 
                 // Получаем реальные размеры изображения
@@ -73,7 +83,7 @@ class ControllerInformationAuthor extends Controller {
                     }
                 }
             } else {
-                $data['image'] = $this->model_tool_image->resize('placeholder.png', 400, 400);
+                $data['image'] = $this->model_tool_image->resize('placeholder.png', $author_page_width, $author_page_height);
                 $data['image_original'] = $this->config->get('config_url') . 'image/placeholder.png';
                 
                 $image_path = DIR_IMAGE . 'placeholder.png';
@@ -106,9 +116,9 @@ class ControllerInformationAuthor extends Controller {
 
             foreach ($results as $result) {
                 if ($result['image'] && file_exists(DIR_IMAGE . $result['image'])) {
-                    $image = $this->model_tool_image->resize($result['image'], 400, 300);
+                    $image = $this->model_tool_image->resize($result['image'], $article_image_width, $article_image_height);
                 } else {
-                    $image = $this->model_tool_image->resize('placeholder.png', 400, 300);
+                    $image = $this->model_tool_image->resize('placeholder.png', $article_image_width, $article_image_height);
                 }
 
                 $data['articles'][] = array(
@@ -295,10 +305,13 @@ class ControllerInformationAuthor extends Controller {
         }
     }
 
-    private function showAuthorsList() {
-        $this->document->setTitle($this->language->get('heading_title'));
-        $this->document->setDescription($this->language->get('meta_description'));
-        $this->document->setKeywords($this->language->get('meta_keyword'));
+    private function showAuthorsList($author_list_width, $author_list_height) {
+        // Получаем SEO данные для списка авторов
+        $author_list_data = $this->getAuthorListData();
+        
+        $this->document->setTitle($author_list_data['meta_title']);
+        $this->document->setDescription($author_list_data['meta_description']);
+        $this->document->setKeywords($author_list_data['meta_keyword']);
         
         $data['breadcrumbs'] = array();
         
@@ -313,21 +326,29 @@ class ControllerInformationAuthor extends Controller {
         );
 
         $data['breadcrumbs'][] = array(
-            'text' => $this->language->get('text_authors'),
+            'text' => $author_list_data['name'],
             'href' => ''
         );
+
+        if ($author_list_data['h1']) {
+            $data['heading_title'] = $author_list_data['h1'];
+        } else {
+            $data['heading_title'] = $author_list_data['name'];
+        }
+        
+        $data['description'] = html_entity_decode($author_list_data['description'], ENT_QUOTES, 'UTF-8');
 
         $data['authors'] = array();
         $results = $this->model_catalog_author->getAllAuthors();
 
         foreach ($results as $result) {
             // Получаем оригинальное изображение и его размеры
-            $image_width = 300;
-            $image_height = 300;
+            $image_width = $author_list_width;
+            $image_height = $author_list_height;
             $image_original = '';
             
             if ($result['image'] && file_exists(DIR_IMAGE . $result['image'])) {
-                $image = $this->model_tool_image->resize($result['image'], 300, 300);
+                $image = $this->model_tool_image->resize($result['image'], $author_list_width, $author_list_height);
                 $image_original = $this->config->get('config_url') . 'image/' . $result['image'];
                 $image_path = DIR_IMAGE . $result['image'];
                 
@@ -340,7 +361,7 @@ class ControllerInformationAuthor extends Controller {
                     }
                 }
             } else {
-                $image = $this->model_tool_image->resize('placeholder.png', 300, 300);
+                $image = $this->model_tool_image->resize('placeholder.png', $author_list_width, $author_list_height);
                 $image_original = $this->config->get('config_url') . 'image/placeholder.png';
                 $image_path = DIR_IMAGE . 'placeholder.png';
                 
@@ -397,7 +418,7 @@ class ControllerInformationAuthor extends Controller {
         $breadcrumbList[] = array(
             '@type' => 'ListItem',
             'position' => $position++,
-            'name' => $this->language->get('text_authors'),
+            'name' => $author_list_data['name'],
             'item' => $current_url
         );
 
@@ -484,7 +505,6 @@ class ControllerInformationAuthor extends Controller {
         $data['microdata'] = $microdata;
         // ===== КОНЕЦ МИКРОРАЗМЕТКИ =====
 
-        $data['heading_title'] = $this->language->get('heading_title');
         $data['text_no_authors'] = $this->language->get('text_no_authors');
         $data['text_articles_count'] = $this->language->get('text_articles_count');
         $data['button_view_author'] = $this->language->get('button_view_author');
@@ -497,6 +517,26 @@ class ControllerInformationAuthor extends Controller {
         $data['header'] = $this->load->controller('common/header');
 
         $this->response->setOutput($this->load->view('information/author_list', $data));
+    }
+
+    private function getAuthorListData() {
+        $language_id = (int)$this->config->get('config_language_id');
+        
+        $query = $this->db->query("SELECT * FROM " . DB_PREFIX . "author_list_description WHERE language_id = '" . $language_id . "'");
+        
+        if ($query->num_rows) {
+            return $query->row;
+        }
+        
+        // Возвращаем данные по умолчанию
+        return array(
+            'name' => 'Авторы',
+            'h1' => 'Наши авторы',
+            'meta_title' => 'Авторы',
+            'meta_description' => '',
+            'meta_keyword' => '',
+            'description' => ''
+        );
     }
 }
 ?>

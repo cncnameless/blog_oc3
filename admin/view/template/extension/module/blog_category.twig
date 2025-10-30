@@ -26,25 +26,195 @@
       </div>
       <div class="panel-body">
         <form action="{{ action }}" method="post" enctype="multipart/form-data" id="form-module" class="form-horizontal">
-          <div class="form-group">
-            <label class="col-sm-2 control-label" for="input-status">{{ entry_status }}</label>
-            <div class="col-sm-10">
-              <select name="module_blog_category_status" id="input-status" class="form-control">
-                {% if module_blog_category_status %}
-                <option value="1" selected="selected">{{ text_enabled }}</option>
-                <option value="0">{{ text_disabled }}</option>
-                {% else %}
-                <option value="1">{{ text_enabled }}</option>
-                <option value="0" selected="selected">{{ text_disabled }}</option>
-                {% endif %}
-              </select>
+          <ul class="nav nav-tabs">
+            <li class="active"><a href="#tab-general" data-toggle="tab">Основные настройки</a></li>
+            <li><a href="#tab-blog-home" data-toggle="tab">SEO главной блога</a></li>
+            <li><a href="#tab-author-list" data-toggle="tab">SEO списка авторов</a></li>
+            <li><a href="#tab-image-sizes" data-toggle="tab">Размеры изображений</a></li>
+          </ul>
+          <div class="tab-content">
+            <!-- Основные настройки -->
+            <div class="tab-pane active" id="tab-general">
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-status">Статус модуля</label>
+                <div class="col-sm-10">
+                  <select name="module_blog_category_status" id="input-status" class="form-control">
+                    {% if module_blog_category_status %}
+                    <option value="1" selected="selected">{{ text_enabled }}</option>
+                    <option value="0">{{ text_disabled }}</option>
+                    {% else %}
+                    <option value="1">{{ text_enabled }}</option>
+                    <option value="0" selected="selected">{{ text_disabled }}</option>
+                    {% endif %}
+                  </select>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-main-keyword">{{ entry_main_keyword }}</label>
+                <div class="col-sm-10">
+                  <input type="text" name="module_blog_category_main_keyword" value="{{ module_blog_category_main_keyword }}" placeholder="{{ entry_main_keyword }}" id="input-main-keyword" class="form-control" />
+                  <small class="form-text text-muted">{{ help_main_keyword }}</small>
+                </div>
+              </div>
             </div>
-          </div>
-          <div class="form-group">
-            <label class="col-sm-2 control-label" for="input-main-keyword">{{ entry_main_keyword }}</label>
-            <div class="col-sm-10">
-              <input type="text" name="module_blog_category_main_keyword" value="{{ module_blog_category_main_keyword }}" placeholder="{{ entry_main_keyword }}" id="input-main-keyword" class="form-control" />
-              <small class="form-text text-muted">{{ help_main_keyword }}</small>
+
+            <!-- SEO главной блога -->
+            <div class="tab-pane" id="tab-blog-home">
+              <ul class="nav nav-tabs" id="blog-home-language">
+                {% for language in languages %}
+                <li><a href="#blog-home-language{{ language.language_id }}" data-toggle="tab"><img src="language/{{ language.code }}/{{ language.code }}.png" title="{{ language.name }}" /> {{ language.name }}</a></li>
+                {% endfor %}
+              </ul>
+              <div class="tab-content">
+                {% for language in languages %}
+                <div class="tab-pane" id="blog-home-language{{ language.language_id }}">
+                  <div class="form-group">
+                    <label class="col-sm-2 control-label" for="input-blog-home-name{{ language.language_id }}">Название</label>
+                    <div class="col-sm-10">
+                      <input type="text" name="blog_home_description[{{ language.language_id }}][name]" value="{{ blog_home_description[language.language_id].name }}" placeholder="Название" id="input-blog-home-name{{ language.language_id }}" class="form-control" />
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label class="col-sm-2 control-label" for="input-blog-home-h1{{ language.language_id }}">H1 заголовок</label>
+                    <div class="col-sm-10">
+                      <input type="text" name="blog_home_description[{{ language.language_id }}][h1]" value="{{ blog_home_description[language.language_id].h1 }}" placeholder="H1 заголовок" id="input-blog-home-h1{{ language.language_id }}" class="form-control" />
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label class="col-sm-2 control-label" for="input-blog-home-meta-title{{ language.language_id }}">Meta Title</label>
+                    <div class="col-sm-10">
+                      <input type="text" name="blog_home_description[{{ language.language_id }}][meta_title]" value="{{ blog_home_description[language.language_id].meta_title }}" placeholder="Meta Title" id="input-blog-home-meta-title{{ language.language_id }}" class="form-control" />
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label class="col-sm-2 control-label" for="input-blog-home-meta-description{{ language.language_id }}">Meta Description</label>
+                    <div class="col-sm-10">
+                      <textarea name="blog_home_description[{{ language.language_id }}][meta_description]" rows="3" placeholder="Meta Description" id="input-blog-home-meta-description{{ language.language_id }}" class="form-control">{{ blog_home_description[language.language_id].meta_description }}</textarea>
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label class="col-sm-2 control-label" for="input-blog-home-meta-keyword{{ language.language_id }}">Meta Keywords</label>
+                    <div class="col-sm-10">
+                      <textarea name="blog_home_description[{{ language.language_id }}][meta_keyword]" rows="3" placeholder="Meta Keywords" id="input-blog-home-meta-keyword{{ language.language_id }}" class="form-control">{{ blog_home_description[language.language_id].meta_keyword }}</textarea>
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label class="col-sm-2 control-label" for="input-blog-home-description{{ language.language_id }}">Описание</label>
+                    <div class="col-sm-10">
+                      <textarea name="blog_home_description[{{ language.language_id }}][description]" rows="5" placeholder="Описание главной страницы блога" id="input-blog-home-description{{ language.language_id }}" class="form-control">{{ blog_home_description[language.language_id].description }}</textarea>
+                    </div>
+                  </div>
+                </div>
+                {% endfor %}
+              </div>
+            </div>
+
+            <!-- SEO списка авторов -->
+            <div class="tab-pane" id="tab-author-list">
+              <ul class="nav nav-tabs" id="author-list-language">
+                {% for language in languages %}
+                <li><a href="#author-list-language{{ language.language_id }}" data-toggle="tab"><img src="language/{{ language.code }}/{{ language.code }}.png" title="{{ language.name }}" /> {{ language.name }}</a></li>
+                {% endfor %}
+              </ul>
+              <div class="tab-content">
+                {% for language in languages %}
+                <div class="tab-pane" id="author-list-language{{ language.language_id }}">
+                  <div class="form-group">
+                    <label class="col-sm-2 control-label" for="input-author-list-name{{ language.language_id }}">Название</label>
+                    <div class="col-sm-10">
+                      <input type="text" name="author_list_description[{{ language.language_id }}][name]" value="{{ author_list_description[language.language_id].name }}" placeholder="Название" id="input-author-list-name{{ language.language_id }}" class="form-control" />
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label class="col-sm-2 control-label" for="input-author-list-h1{{ language.language_id }}">H1 заголовок</label>
+                    <div class="col-sm-10">
+                      <input type="text" name="author_list_description[{{ language.language_id }}][h1]" value="{{ author_list_description[language.language_id].h1 }}" placeholder="H1 заголовок" id="input-author-list-h1{{ language.language_id }}" class="form-control" />
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label class="col-sm-2 control-label" for="input-author-list-meta-title{{ language.language_id }}">Meta Title</label>
+                    <div class="col-sm-10">
+                      <input type="text" name="author_list_description[{{ language.language_id }}][meta_title]" value="{{ author_list_description[language.language_id].meta_title }}" placeholder="Meta Title" id="input-author-list-meta-title{{ language.language_id }}" class="form-control" />
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label class="col-sm-2 control-label" for="input-author-list-meta-description{{ language.language_id }}">Meta Description</label>
+                    <div class="col-sm-10">
+                      <textarea name="author_list_description[{{ language.language_id }}][meta_description]" rows="3" placeholder="Meta Description" id="input-author-list-meta-description{{ language.language_id }}" class="form-control">{{ author_list_description[language.language_id].meta_description }}</textarea>
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label class="col-sm-2 control-label" for="input-author-list-meta-keyword{{ language.language_id }}">Meta Keywords</label>
+                    <div class="col-sm-10">
+                      <textarea name="author_list_description[{{ language.language_id }}][meta_keyword]" rows="3" placeholder="Meta Keywords" id="input-author-list-meta-keyword{{ language.language_id }}" class="form-control">{{ author_list_description[language.language_id].meta_keyword }}</textarea>
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label class="col-sm-2 control-label" for="input-author-list-description{{ language.language_id }}">Описание</label>
+                    <div class="col-sm-10">
+                      <textarea name="author_list_description[{{ language.language_id }}][description]" rows="5" placeholder="Описание страницы списка авторов" id="input-author-list-description{{ language.language_id }}" class="form-control">{{ author_list_description[language.language_id].description }}</textarea>
+                    </div>
+                  </div>
+                </div>
+                {% endfor %}
+              </div>
+            </div>
+
+            <!-- Размеры изображений -->
+            <div class="tab-pane" id="tab-image-sizes">
+              <div class="alert alert-info">
+                <i class="fa fa-info-circle"></i> Настройки размеров изображений для различных элементов блога
+              </div>
+              
+              <div class="form-group">
+                <label class="col-sm-4 control-label">Аватар автора в статьях (ширина x высота)</label>
+                <div class="col-sm-4">
+                  <input type="number" name="blog_author_article_width" value="{{ blog_author_article_width }}" placeholder="Ширина" class="form-control" />
+                </div>
+                <div class="col-sm-4">
+                  <input type="number" name="blog_author_article_height" value="{{ blog_author_article_height }}" placeholder="Высота" class="form-control" />
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="col-sm-4 control-label">Аватар автора на странице автора (ширина x высота)</label>
+                <div class="col-sm-4">
+                  <input type="number" name="blog_author_page_width" value="{{ blog_author_page_width }}" placeholder="Ширина" class="form-control" />
+                </div>
+                <div class="col-sm-4">
+                  <input type="number" name="blog_author_page_height" value="{{ blog_author_page_height }}" placeholder="Высота" class="form-control" />
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="col-sm-4 control-label">Аватар автора в списке авторов (ширина x высота)</label>
+                <div class="col-sm-4">
+                  <input type="number" name="blog_author_list_image_width" value="{{ blog_author_list_image_width }}" placeholder="Ширина" class="form-control" />
+                </div>
+                <div class="col-sm-4">
+                  <input type="number" name="blog_author_list_image_height" value="{{ blog_author_list_image_height }}" placeholder="Высота" class="form-control" />
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="col-sm-4 control-label">Изображение статьи (ширина x высота)</label>
+                <div class="col-sm-4">
+                  <input type="number" name="blog_article_image_width" value="{{ blog_article_image_width }}" placeholder="Ширина" class="form-control" />
+                </div>
+                <div class="col-sm-4">
+                  <input type="number" name="blog_article_image_height" value="{{ blog_article_image_height }}" placeholder="Высота" class="form-control" />
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="col-sm-4 control-label">Изображение категории блога (ширина x высота)</label>
+                <div class="col-sm-4">
+                  <input type="number" name="blog_category_image_width" value="{{ blog_category_image_width }}" placeholder="Ширина" class="form-control" />
+                </div>
+                <div class="col-sm-4">
+                  <input type="number" name="blog_category_image_height" value="{{ blog_category_image_height }}" placeholder="Высота" class="form-control" />
+                </div>
+              </div>
             </div>
           </div>
         </form>
@@ -52,4 +222,10 @@
     </div>
   </div>
 </div>
+
+<script type="text/javascript">
+// Активация табов для языков
+$('#blog-home-language a:first').tab('show');
+$('#author-list-language a:first').tab('show');
+</script>
 {{ footer }}
