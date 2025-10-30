@@ -204,98 +204,116 @@ class ControllerInformationInformation extends Controller {
         $json_ld['breadcrumb'] = $breadcrumb_list;
 
         // 2. Основная микроразметка статьи
-        $article_data = array(
-            '@context' => 'https://schema.org',
-            '@type' => $schema_type,
-            'mainEntityOfPage' => array(
-                '@type' => 'WebPage',
-                '@id' => $current_url
-            ),
-            'headline' => $information_info['title'],
-            'description' => $clean_description,
-            'datePublished' => $information_info['date_added'],
-            'dateModified' => $information_info['date_modified'],
-            'url' => $current_url
-        );
-
-        // Добавляем изображение если есть
-        if (!empty($information_info['image']) && $information_info['image'] != 'placeholder.png') {
-            $article_data['image'] = array(
-                '@type' => 'ImageObject',
-                'url' => $base_url . 'image/' . $information_info['image'],
-                'width' => 800,
-                'height' => 400
+        if ($schema_type === 'Organization') {
+            // Для Organization используем правильные свойства
+            $article_data = array(
+                '@context' => 'https://schema.org',
+                '@type' => $schema_type,
+                'name' => $information_info['title'], // используем name вместо headline
+                'description' => $clean_description,
+                'url' => $current_url
             );
-        }
 
-        // ИСПРАВЛЕНИЕ: Добавляем авторов ТОЛЬКО если они есть у статьи
-        if (isset($data['authors']) && $data['authors']) {
-            $authors_array = array();
-            foreach ($data['authors'] as $author) {
-                $author_data = array(
-                    '@type' => 'Person',
-                    'name' => $author['name']
+            // Добавляем изображение если есть
+            if (!empty($information_info['image']) && $information_info['image'] != 'placeholder.png') {
+                $article_data['image'] = array(
+                    '@type' => 'ImageObject',
+                    'url' => $base_url . 'image/' . $information_info['image'],
+                    'width' => 800,
+                    'height' => 400
                 );
-                
-                if (!empty($author['job_title'])) {
-                    $author_data['jobTitle'] = $author['job_title'];
-                }
-                
-                if (!empty($author['href'])) {
-                    $author_data['url'] = $author['href'];
-                }
-                
-                if (!empty($author['image']) && $author['image'] != $this->model_tool_image->resize('placeholder.png', 80, 80)) {
-                    $author_data['image'] = $author['image'];
-                }
-                
-                $authors_array[] = $author_data;
             }
-            
-            if (count($authors_array) === 1) {
-                $article_data['author'] = $authors_array[0];
-            } else {
-                $article_data['author'] = $authors_array;
-            }
-        }
-        // ИСПРАВЛЕНИЕ: Если авторов нет - свойство author не выводим
 
-        // Издатель (организация) - для всех типов статей
-        $article_data['publisher'] = array(
-            '@type' => 'Organization',
-            'name' => $this->config->get('config_name'),
-            'logo' => array(
-                '@type' => 'ImageObject',
-                'url' => $base_url . 'image/' . $this->config->get('config_logo')
-            )
-        );
-        
-        // Специфичные поля для каждого типа
-        switch ($schema_type) {
-            case 'Review':
-                if (isset($information_info['rating_value']) && $information_info['rating_value'] !== null) {
-                    $article_data['reviewRating'] = array(
-                        '@type' => 'Rating',
-                        'ratingValue' => (float)$information_info['rating_value'],
-                        'bestRating' => 5,
-                        'worstRating' => 1
+            // Для Organization не включаем publisher, так как это невалидно
+
+        } else {
+            // Для статей блога, новостей, обзоров
+            $article_data = array(
+                '@context' => 'https://schema.org',
+                '@type' => $schema_type,
+                'mainEntityOfPage' => array(
+                    '@type' => 'WebPage',
+                    '@id' => $current_url
+                ),
+                'headline' => $information_info['title'],
+                'description' => $clean_description,
+                'datePublished' => $information_info['date_added'],
+                'dateModified' => $information_info['date_modified'],
+                'url' => $current_url
+            );
+
+            // Добавляем изображение если есть
+            if (!empty($information_info['image']) && $information_info['image'] != 'placeholder.png') {
+                $article_data['image'] = array(
+                    '@type' => 'ImageObject',
+                    'url' => $base_url . 'image/' . $information_info['image'],
+                    'width' => 800,
+                    'height' => 400
+                );
+            }
+
+            // Авторы только для статей, новостей и обзоров
+            if (isset($data['authors']) && $data['authors']) {
+                $authors_array = array();
+                foreach ($data['authors'] as $author) {
+                    $author_data = array(
+                        '@type' => 'Person',
+                        'name' => $author['name']
                     );
+                    
+                    if (!empty($author['job_title'])) {
+                        $author_data['jobTitle'] = $author['job_title'];
+                    }
+                    
+                    if (!empty($author['href'])) {
+                        $author_data['url'] = $author['href'];
+                    }
+                    
+                    if (!empty($author['image']) && $author['image'] != $this->model_tool_image->resize('placeholder.png', 80, 80)) {
+                        $author_data['image'] = $author['image'];
+                    }
+                    
+                    $authors_array[] = $author_data;
                 }
-                break;
                 
-            case 'NewsArticle':
-                $article_data['dateline'] = $information_info['date_added'];
-                break;
-                
-            case 'Organization':
-                unset($article_data['author']);
-                unset($article_data['datePublished']);
-                unset($article_data['dateModified']);
-                break;
-                
-            case 'BlogPosting':
-            default:
-                break;
+                if (count($authors_array) === 1) {
+                    $article_data['author'] = $authors_array[0];
+                } else {
+                    $article_data['author'] = $authors_array;
+                }
+            }
+
+            // Издатель (организация) - для всех типов кроме Organization
+            $article_data['publisher'] = array(
+                '@type' => 'Organization',
+                'name' => $this->config->get('config_name'),
+                'logo' => array(
+                    '@type' => 'ImageObject',
+                    'url' => $base_url . 'image/' . $this->config->get('config_logo')
+                )
+            );
+            
+            // Специфичные поля для каждого типа
+            switch ($schema_type) {
+                case 'Review':
+                    if (isset($information_info['rating_value']) && $information_info['rating_value'] !== null) {
+                        $article_data['reviewRating'] = array(
+                            '@type' => 'Rating',
+                            'ratingValue' => (float)$information_info['rating_value'],
+                            'bestRating' => 5,
+                            'worstRating' => 1
+                        );
+                    }
+                    break;
+                    
+                case 'NewsArticle':
+                    $article_data['dateline'] = $information_info['date_added'];
+                    break;
+                    
+                case 'BlogPosting':
+                default:
+                    break;
+            }
         }
 
         $json_ld['article'] = $article_data;

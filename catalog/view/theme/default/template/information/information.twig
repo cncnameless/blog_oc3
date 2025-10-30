@@ -1,10 +1,10 @@
 {{ header }}
 
-{# Микроразметка Schema.org для статьи #}
+{# Микроразметка Schema.org #}
 {% if json_ld %}
-    {% for ld_item in json_ld %}
+    {% for key, ld_item in json_ld %}
     <script type="application/ld+json">
-    {{ ld_item|json_encode(constant('JSON_UNESCAPED_SLASHES') b-or constant('JSON_UNESCAPED_UNICODE'))|raw }}
+    {{ ld_item|json_encode(constant('JSON_UNESCAPED_SLASHES') b-or constant('JSON_UNESCAPED_UNICODE') b-or constant('JSON_PRETTY_PRINT')) }}
     </script>
     {% endfor %}
 {% endif %}
@@ -34,49 +34,51 @@
       <h1>{{ heading_title }}</h1>
       
       {# Мета-информация для статей блога #}
-      {% if date_added or viewed or reading_time or authors %}
-      <div class="blog-meta" style="margin: 20px 0; padding: 15px; background: #f8f8f8; border-radius: 5px;">
+      {% if date_added or viewed or reading_time %}
+      <div class="blog-meta">
         {% if date_added %}
-        <span style="margin-right: 20px;">
-          <i class="fa fa-calendar"></i> {{ date_added }}
-        </span>
+        <span><i class="fa fa-calendar"></i> {{ date_added }}</span>
         {% endif %}
-        
         {% if viewed %}
-        <span style="margin-right: 20px;">
-          <i class="fa fa-eye"></i> {{ viewed }} {{ text_views }}
-        </span>
+        <span><i class="fa fa-eye"></i> {{ viewed }} {{ text_views }}</span>
         {% endif %}
-        
         {% if reading_time %}
-        <span style="margin-right: 20px;">
-          <i class="fa fa-clock-o"></i> {{ reading_time }} {{ text_reading_time }}
-        </span>
-        {% endif %}
-        
-        {# Авторы статьи #}
-        {% if authors %}
-        <div style="margin-top: 10px;">
-          <strong><i class="fa fa-users"></i> Авторы:</strong>
-          {% for author in authors %}
-          <span style="margin-left: 10px;">
-            {% if author.href %}
-            <a href="{{ author.href }}" title="{{ author.name }}">{{ author.name }}</a>
-            {% else %}
-            {{ author.name }}
-            {% endif %}
-            {% if author.job_title %}
-            <small>({{ author.job_title }})</small>
-            {% endif %}
-          </span>
-          {% if not loop.last %}, {% endif %}
-          {% endfor %}
-        </div>
+        <span><i class="fa fa-clock-o"></i> {{ reading_time }} {{ text_reading_time }}</span>
         {% endif %}
       </div>
       {% endif %}
       
-      <div class="information-info">
+      {# Авторы для статей блога #}
+      {% if authors %}
+      <div class="blog-authors">
+        <h4>{{ text_authors }}:</h4>
+        <div class="row">
+          {% for author in authors %}
+          <div class="col-sm-6">
+            <div class="author-info">
+              <div class="author-image">
+                <img src="{{ author.image }}" alt="{{ author.name }}">
+              </div>
+              <div class="author-details">
+                <h5>
+                  <a href="{{ author.href }}">{{ author.name }}</a>
+                  {% if author.is_primary %}<small>({{ text_primary_author }})</small>{% endif %}
+                </h5>
+                {% if author.job_title %}
+                <p class="author-job">{{ author.job_title }}</p>
+                {% endif %}
+                {% if author.bio %}
+                <p class="author-bio">{{ author.bio }}</p>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+      
+      <div class="information-content">
         {{ description }}
       </div>
       

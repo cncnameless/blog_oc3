@@ -1,10 +1,29 @@
 <?php
 class ControllerStartupSeoUrl extends Controller {
+	// Окнчание для SeoUrl
 	private $postfix = 'html';
 	private $postfix_route = ['product/product', 'information/information'];
 	private $enable_postfix = false;
 	private $enable_slash = false;
 	private $mode = 0;
+
+	// Новые настройки слэша
+	private $enable_slash_category = false;
+	private $enable_slash_product = false;
+
+	/* Префикс ЧПУ для определённых роутов.
+
+	Пример - Приставка /brand/ для всех производителей :
+	private $prefix_by_route = [
+		'product/manufacturer/info' => 'brand',
+	];
+
+	Пример - Приставка /category/ для категорий и /product/ для товаров :
+	private $prefix_by_route = [
+		'product/category'          => 'category',
+		'product/product'           => 'product',
+	];
+	*/
 	private $prefix_by_route = [];
 
 	// Кеши
@@ -16,9 +35,14 @@ class ControllerStartupSeoUrl extends Controller {
 
 	public function __construct($registry) {
 		parent::__construct($registry);
+		
 		$this->enable_postfix = $this->config->get('config_seo_url_postfix');
 		$this->enable_slash = $this->config->get('config_seo_url_slash');
 		$this->mode = (int)$this->config->get('config_seo_url_mode');
+		
+		// Новые настройки слэша
+		$this->enable_slash_category = $this->config->get('config_seo_url_slash_category');
+		$this->enable_slash_product = $this->config->get('config_seo_url_slash_product');
 	}
 
 	public function index() {
@@ -201,14 +225,14 @@ class ControllerStartupSeoUrl extends Controller {
 			if ($route == 'information/blog_category' && !isset($data['blog_category_id'])) {
 				$url = '/blog';
 				unset($data['route']);
-				return $this->buildFinalUrl($url_info, $url, $data, false, $route);
+				return $this->buildFinalUrl($url_info, $url, $data, $route);
 			}
 
 			// ПЕРВОЕ: Обрабатываем страницу авторов (без author_id)
 			if ($route == 'information/author' && !isset($data['author_id'])) {
 				$url = '/blog/authors';
 				unset($data['route']);
-				return $this->buildFinalUrl($url_info, $url, $data, false, $route);
+				return $this->buildFinalUrl($url_info, $url, $data, $route);
 			}
 
 			// Обрабатываем остальные маршруты блога
@@ -323,7 +347,7 @@ class ControllerStartupSeoUrl extends Controller {
 	}
 
 	/**
-	 * Собирает финальный URL
+	 * Собирает финальный URL с улучшенной логикой слэшей
 	 */
 	private function buildFinalUrl($url_info, $url, $data, $route) {
 		$has_postfix = false;
@@ -335,8 +359,49 @@ class ControllerStartupSeoUrl extends Controller {
 			}
 		}
 
-		if ($this->enable_slash && !$has_postfix && $url != '/') {
-			$url .= '/';
+		// ОПТИМИЗИРОВАННАЯ ЛОГИКА ДОБАВЛЕНИЯ СЛЭША ДЛЯ БЛОГА И СТАНДАРТНЫХ СТРАНИЦ
+		if ($this->enable_slash) {
+			$add_slash = false;
+			
+			// СУПЕР-БЫСТРАЯ ПРОВЕРКА: если обе опции включены - добавляем ко всем ссылкам
+			if ($this->enable_slash_category && $this->enable_slash_product) {
+				$add_slash = true;
+			} 
+			// Если включена только одна опция - определяем тип страницы
+			elseif ($this->enable_slash_category || $this->enable_slash_product) {
+				$current_route = $route;
+				
+				// Быстрая проверка по паттернам (вместо массивов)
+				$is_listing_page = strpos($current_route, 'category') !== false || 
+								   strpos($current_route, 'manufacturer') !== false ||
+								   strpos($current_route, 'special') !== false ||
+								   strpos($current_route, 'search') !== false;
+				
+				// ДОБАВЛЕНО: для блога - категории блога и список авторов считаем списками
+				if (!$is_listing_page) {
+					$is_listing_page = ($current_route == 'information/blog_category') || 
+									   ($current_route == 'information/author' && !isset($data['author_id']));
+				}
+				
+				// Для категорий: добавляем только если это список И включена опция категорий
+				if ($is_listing_page && $this->enable_slash_category) {
+					$add_slash = true;
+				}
+				// Для товаров: добавляем если НЕ список И включена опция товаров
+				elseif (!$is_listing_page && $this->enable_slash_product) {
+					$add_slash = true;
+				}
+			}
+			// Для совместимости: если новые настройки не заданы, используем старую логику
+			elseif (!$this->config->has('config_seo_url_slash_category') && 
+					!$this->config->has('config_seo_url_slash_product') && 
+					!$has_postfix && $url != '/') {
+				$add_slash = true;
+			}
+			
+			if ($add_slash) {
+				$url .= '/';
+			}
 		}
 
 		unset($data['route']);
