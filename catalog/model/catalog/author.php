@@ -118,6 +118,11 @@ class ModelCatalogAuthor extends Model {
         return $query->rows;
     }
 
+    // ДОБАВЛЕННЫЙ МЕТОД ДЛЯ СОВМЕСТИМОСТИ С КОНТРОЛЛЕРОМ BLOG_CATEGORY
+    public function getAuthorsByInformationId($information_id) {
+        return $this->getAuthorsByInformation($information_id);
+    }
+
     public function getAllAuthors($data = array()) {
         // Проверяем существование таблиц
         $table_exists = $this->db->query("SHOW TABLES LIKE '" . DB_PREFIX . "article_author'");

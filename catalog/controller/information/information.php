@@ -2,7 +2,7 @@
 class ControllerInformationInformation extends Controller {
     public function index() {
         $this->load->language('information/information');
-        $this->load->language('information/blog_category'); // Загружаем языковой файл блога
+        $this->load->language('information/blog_category');
 
         $this->load->model('catalog/information');
         $this->load->model('catalog/blog_category');
@@ -18,7 +18,6 @@ class ControllerInformationInformation extends Controller {
         $information_info = $this->model_catalog_information->getInformation($information_id);
 
         if ($information_info) {
-            // Увеличиваем счетчик просмотров
             $this->model_catalog_information->updateViewed($information_id);
 
             $this->document->setTitle($information_info['meta_title']);
@@ -27,10 +26,9 @@ class ControllerInformationInformation extends Controller {
 
             $data['breadcrumbs'] = array();
 
-            // ИСПРАВЛЕНО: Иконка домика для главной страницы
             $data['breadcrumbs'][] = array(
-                'text' => '<i class="fa fa-home"></i>',
-                'href' => $this->url->link('common/home')
+                'text' => $this->language->get('text_home'),
+                'href' => $this->url->link('common/home', '', true)
             );
 
             // Проверяем, является ли статья частью блога
@@ -38,32 +36,26 @@ class ControllerInformationInformation extends Controller {
             
             if ($blog_categories) {
                 // Это статья блога - формируем хлебные крошки через категории блога
-                $blog_category_id = $blog_categories[0]; // Берем первую категорию
+                $blog_category_id = $blog_categories[0];
                 
                 // Добавляем главную страницу блога
                 $data['breadcrumbs'][] = array(
                     'text' => $this->language->get('text_blog'),
-                    'href' => $this->url->link('information/blog_category')
+                    'href' => $this->url->link('information/blog_category', '', true)
                 );
 
                 // Получаем путь категории для хлебных крошек
                 $category_paths = $this->model_catalog_blog_category->getBlogCategoryPaths($blog_category_id);
                 
-                // ИСПРАВЛЕНО: Убираем дублирование последней категории
-                // Метод getBlogCategoryPaths возвращает полный путь, включая текущую категорию
                 foreach ($category_paths as $path) {
-                    // Добавляем все категории пути, включая текущую
                     $data['breadcrumbs'][] = array(
                         'text' => $path['name'],
-                        'href' => $this->url->link('information/blog_category', 'blog_category_id=' . $path['blog_category_id'])
+                        'href' => $this->url->link('information/blog_category', 'blog_category_id=' . $path['blog_category_id'], true)
                     );
                 }
-                
-                // ИСПРАВЛЕНО: Убираем добавление текущей категории отдельно, так как она уже есть в category_paths
-                // Теперь сразу переходим к добавлению статьи
 
             } else {
-                // Обычная информационная страница - категории информационных страниц (если есть)
+                // Обычная информационная страница
                 $categories = $this->getInformationCategories($information_id);
                 foreach ($categories as $category) {
                     $data['breadcrumbs'][] = array(
@@ -73,7 +65,7 @@ class ControllerInformationInformation extends Controller {
                 }
             }
 
-            // ИСПРАВЛЕНО: Сама статья всегда без ссылки (во избежание дублей)
+            // Сама статья всегда без ссылки
             $data['breadcrumbs'][] = array(
                 'text' => $information_info['title'],
                 'href' => ''
@@ -104,13 +96,13 @@ class ControllerInformationInformation extends Controller {
                         'job_title' => $author['job_title'],
                         'bio' => utf8_substr(strip_tags(html_entity_decode($author['bio'], ENT_QUOTES, 'UTF-8')), 0, 200) . '..',
                         'image' => $image,
-                        'href' => $this->url->link('information/author', 'author_id=' . $author['author_id']),
+                        'href' => $this->url->link('information/author', 'author_id=' . $author['author_id'], true),
                         'is_primary' => $author['is_primary']
                     );
                 }
 
-                // Microdata для Schema.org - ОБНОВЛЕННЫЙ КОД
-                $data['microdata'] = $this->generateMicrodata($information_info, $data);
+                // Microdata для Schema.org
+                $data['json_ld'] = $this->generateSchemaMarkup($information_info, $data);
 
             } else {
                 // Для обычных информационных страниц
@@ -118,7 +110,7 @@ class ControllerInformationInformation extends Controller {
                 $data['viewed'] = '';
                 $data['reading_time'] = '';
                 $data['authors'] = array();
-                $data['microdata'] = array();
+                $data['json_ld'] = array();
             }
 
             $data['text_views'] = $this->language->get('text_views');
@@ -142,10 +134,9 @@ class ControllerInformationInformation extends Controller {
 
             $data['breadcrumbs'] = array();
 
-            // ИСПРАВЛЕНО: Иконка домика для главной страницы
             $data['breadcrumbs'][] = array(
-                'text' => '<i class="fa fa-home"></i>',
-                'href' => $this->url->link('common/home')
+                'text' => $this->language->get('text_home'),
+                'href' => $this->url->link('common/home', '', true)
             );
 
             $data['breadcrumbs'][] = array(
@@ -170,49 +161,107 @@ class ControllerInformationInformation extends Controller {
         }
     }
 
-    /**
-     * Получает категории информационной страницы (для обычных страниц)
-     */
     private function getInformationCategories($information_id) {
-        // Если у вас есть категории для информационных страниц, реализуйте этот метод
-        // Пока возвращаем пустой массив
         return array();
     }
 
     /**
      * Генерация микроразметки JSON-LD
      */
-    private function generateMicrodata($information_info, $data) {
-        $microdata = array();
-        $base_url = $this->config->get('config_url');
+    private function generateSchemaMarkup($information_info, $data) {
+        $json_ld = array();
+        $base_url = HTTP_SERVER;
+        $current_url = $this->url->link('information/information', 'information_id=' . $information_info['information_id'], true);
         
         $schema_type = isset($information_info['schema_type']) ? $information_info['schema_type'] : 'BlogPosting';
         
-        // Основные данные, общие для всех типов
-        $microdata['@context'] = 'https://schema.org';
-        $microdata['@type'] = $schema_type;
-        $microdata['mainEntityOfPage'] = array(
-            '@type' => 'WebPage',
-            '@id' => $this->url->link('information/information', 'information_id=' . $information_info['information_id'])
-        );
-        $microdata['headline'] = $information_info['title'];
-        $microdata['datePublished'] = $information_info['date_added'];
-        $microdata['dateModified'] = $information_info['date_modified'];
+        // Очищаем описание от HTML и лишних символов
+        $clean_description = $this->cleanTextForSchema($information_info['description']);
         
-        // Добавляем авторов
+        // 1. BreadcrumbList
+        $breadcrumb_list = array(
+            '@context' => 'https://schema.org',
+            '@type' => 'BreadcrumbList',
+            'itemListElement' => array()
+        );
+
+        $position = 1;
+        foreach ($data['breadcrumbs'] as $breadcrumb) {
+            $name = strip_tags(html_entity_decode($breadcrumb['text'], ENT_QUOTES, 'UTF-8'));
+            $name = preg_replace('/\s+/', ' ', trim($name));
+            
+            $item_url = $breadcrumb['href'] ? $this->getAbsoluteUrl($breadcrumb['href']) : $current_url;
+            
+            $breadcrumb_list['itemListElement'][] = array(
+                '@type' => 'ListItem',
+                'position' => $position,
+                'name' => $name,
+                'item' => $item_url
+            );
+            $position++;
+        }
+
+        $json_ld['breadcrumb'] = $breadcrumb_list;
+
+        // 2. Основная микроразметка статьи
+        $article_data = array(
+            '@context' => 'https://schema.org',
+            '@type' => $schema_type,
+            'mainEntityOfPage' => array(
+                '@type' => 'WebPage',
+                '@id' => $current_url
+            ),
+            'headline' => $information_info['title'],
+            'description' => $clean_description,
+            'datePublished' => $information_info['date_added'],
+            'dateModified' => $information_info['date_modified'],
+            'url' => $current_url
+        );
+
+        // Добавляем изображение если есть
+        if (!empty($information_info['image']) && $information_info['image'] != 'placeholder.png') {
+            $article_data['image'] = array(
+                '@type' => 'ImageObject',
+                'url' => $base_url . 'image/' . $information_info['image'],
+                'width' => 800,
+                'height' => 400
+            );
+        }
+
+        // ИСПРАВЛЕНИЕ: Добавляем авторов ТОЛЬКО если они есть у статьи
         if (isset($data['authors']) && $data['authors']) {
-            $microdata['author'] = array();
+            $authors_array = array();
             foreach ($data['authors'] as $author) {
-                $microdata['author'][] = array(
+                $author_data = array(
                     '@type' => 'Person',
-                    'name' => $author['name'],
-                    'jobTitle' => $author['job_title']
+                    'name' => $author['name']
                 );
+                
+                if (!empty($author['job_title'])) {
+                    $author_data['jobTitle'] = $author['job_title'];
+                }
+                
+                if (!empty($author['href'])) {
+                    $author_data['url'] = $author['href'];
+                }
+                
+                if (!empty($author['image']) && $author['image'] != $this->model_tool_image->resize('placeholder.png', 80, 80)) {
+                    $author_data['image'] = $author['image'];
+                }
+                
+                $authors_array[] = $author_data;
+            }
+            
+            if (count($authors_array) === 1) {
+                $article_data['author'] = $authors_array[0];
+            } else {
+                $article_data['author'] = $authors_array;
             }
         }
-        
-        // Издатель (организация)
-        $microdata['publisher'] = array(
+        // ИСПРАВЛЕНИЕ: Если авторов нет - свойство author не выводим
+
+        // Издатель (организация) - для всех типов статей
+        $article_data['publisher'] = array(
             '@type' => 'Organization',
             'name' => $this->config->get('config_name'),
             'logo' => array(
@@ -221,14 +270,11 @@ class ControllerInformationInformation extends Controller {
             )
         );
         
-        // Описание
-        $microdata['description'] = strip_tags(html_entity_decode($information_info['description'], ENT_QUOTES, 'UTF-8'));
-        
         // Специфичные поля для каждого типа
         switch ($schema_type) {
             case 'Review':
                 if (isset($information_info['rating_value']) && $information_info['rating_value'] !== null) {
-                    $microdata['reviewRating'] = array(
+                    $article_data['reviewRating'] = array(
                         '@type' => 'Rating',
                         'ratingValue' => (float)$information_info['rating_value'],
                         'bestRating' => 5,
@@ -238,23 +284,52 @@ class ControllerInformationInformation extends Controller {
                 break;
                 
             case 'NewsArticle':
-                $microdata['dateline'] = $information_info['date_added'];
+                $article_data['dateline'] = $information_info['date_added'];
                 break;
                 
             case 'Organization':
-                // Для Organization убираем лишние поля
-                unset($microdata['author']);
-                unset($microdata['datePublished']);
-                unset($microdata['dateModified']);
+                unset($article_data['author']);
+                unset($article_data['datePublished']);
+                unset($article_data['dateModified']);
                 break;
                 
             case 'BlogPosting':
             default:
-                // Стандартные поля для блога
                 break;
         }
+
+        $json_ld['article'] = $article_data;
+
+        return $json_ld;
+    }
+
+    /**
+     * Очистка текста для микроразметки
+     */
+    private function cleanTextForSchema($text) {
+        $clean = strip_tags(html_entity_decode($text, ENT_QUOTES, 'UTF-8'));
+        $clean = preg_replace('/\s+/', ' ', $clean);
+        $clean = trim($clean);
+        return $clean;
+    }
+
+    /**
+     * Получение абсолютного URL из относительного
+     */
+    private function getAbsoluteUrl($relative_url) {
+        if (strpos($relative_url, HTTP_SERVER) === 0) {
+            return $relative_url;
+        }
         
-        return $microdata;
+        if (strpos($relative_url, 'http') === 0) {
+            return $relative_url;
+        }
+        
+        if (strpos($relative_url, 'route=') !== false) {
+            return $this->url->link($relative_url, '', true);
+        }
+        
+        return HTTP_SERVER . ltrim($relative_url, '/');
     }
 }
 ?>

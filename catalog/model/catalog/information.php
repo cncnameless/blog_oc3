@@ -95,6 +95,7 @@ class ModelCatalogInformation extends Model {
         // Получаем все дочерние категории для текущей категории
         $child_categories = $this->getChildBlogCategoriesIds($blog_category_id);
         
+        // ИСПРАВЛЕНИЕ: Выбираем ВСЕ поля из information включая schema_type и rating_value
         $sql = "SELECT DISTINCT i.*, id.title, id.description FROM " . DB_PREFIX . "information i 
                 LEFT JOIN " . DB_PREFIX . "information_description id ON (i.information_id = id.information_id) 
                 LEFT JOIN " . DB_PREFIX . "information_to_blog_category i2bc ON (i.information_id = i2bc.information_id) 
@@ -148,6 +149,7 @@ class ModelCatalogInformation extends Model {
             return array();
         }
 
+        // ИСПРАВЛЕНИЕ: Выбираем ВСЕ поля из information включая schema_type и rating_value
         $sql = "SELECT DISTINCT i.*, id.title, id.description FROM " . DB_PREFIX . "information i 
                 LEFT JOIN " . DB_PREFIX . "information_description id ON (i.information_id = id.information_id) 
                 LEFT JOIN " . DB_PREFIX . "information_to_blog_category i2bc ON (i.information_id = i2bc.information_id) 

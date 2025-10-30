@@ -3,11 +3,98 @@
     margin-bottom: 20px;
 }
 
+.blog-category-image img {
+    border-radius: 5px;
+}
+
 .blog-category-description {
     margin-bottom: 30px;
     padding: 20px;
     background: #f8f8f8;
     border-radius: 5px;
+    font-size: 16px;
+    line-height: 1.6;
+    color: #555;
+}
+
+/* Подкатегории */
+.blog-subcategories {
+    margin: 30px 0;
+}
+
+.subcategory-item {
+    margin-bottom: 20px;
+    padding: 15px;
+    border: 1px solid #eee;
+    border-radius: 5px;
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+.subcategory-item:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+}
+
+.subcategory-item h4 {
+    margin: 0;
+}
+
+.subcategory-item h4 a {
+    color: #333;
+    text-decoration: none;
+}
+
+.subcategory-item h4 a:hover {
+    color: #229ac8;
+}
+
+/* Корневые категории блога */
+.blog-root-categories {
+    margin: 30px 0;
+}
+
+.category-item {
+    margin-bottom: 20px;
+    padding: 20px;
+    background: #f9f9f9;
+    border-radius: 5px;
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+.category-item:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+}
+
+.category-item h3 {
+    margin: 0 0 10px 0;
+}
+
+.category-item h3 a {
+    color: #333;
+    text-decoration: none;
+}
+
+.category-item h3 a:hover {
+    color: #229ac8;
+}
+
+/* Специальная карточка авторов */
+.category-item.authors-card {
+    background: #e9f7fe;
+    border: 2px dashed #4ab2f1;
+}
+
+.category-item.authors-card h3 a {
+    color: #2a6496;
+}
+
+.category-item.authors-card p {
+    margin: 0;
+    color: #555;
+    font-size: 13px;
 }
 
 /* Список статей */
@@ -21,6 +108,7 @@
     border-radius: 5px;
     overflow: hidden;
     transition: all 0.3s;
+    height: 100%;
 }
 
 .blog-item:hover {
@@ -51,6 +139,9 @@
 .blog-info h4 {
     margin: 0 0 10px 0;
     font-size: 18px;
+    min-height: 48px;
+    display: flex;
+    align-items: center;
 }
 
 .blog-info h4 a {
@@ -79,14 +170,43 @@
 .blog-description {
     margin: 15px 0;
     color: #666;
+    font-size: 14px;
+    line-height: 1.4;
+    min-height: 60px;
 }
 
-/* Страница статьи */
-.information-info .blog-meta {
-    margin: 20px 0;
-    padding: 15px;
-    background: #f8f8f8;
-    border-radius: 5px;
+/* Авторы статей */
+.blog-authors {
+    margin-bottom: 15px;
+    font-size: 13px;
+    color: #777;
+}
+
+.blog-authors i {
+    margin-right: 5px;
+}
+
+/* Рейтинг для обзоров */
+.blog-rating {
+    margin-bottom: 15px;
+}
+
+.blog-rating .fa-star {
+    color: #ffc107;
+}
+
+.blog-rating .fa-star-o {
+    color: #ddd;
+}
+
+.blog-rating span {
+    margin-left: 5px;
+    color: #666;
+}
+
+/* Кнопка "Читать далее" */
+.blog-info .btn-primary {
+    margin-top: 10px;
 }
 
 /* СТИЛИ ДЛЯ СТРАНИЦЫ АВТОРОВ */
@@ -94,56 +214,69 @@
     margin-top: 30px;
 }
 
-.author-thumb {
-    background: #f9f9f9;
+.author-card {
+    margin-bottom: 30px;
+    padding: 20px;
     border: 1px solid #eee;
     border-radius: 8px;
-    padding: 20px;
-    margin-bottom: 30px;
     height: 100%;
-    transition: transform 0.3s ease;
+    transition: all 0.3s ease;
     text-align: center;
 }
 
-.author-thumb:hover {
-    transform: translateY(-5px);
+.author-card:hover {
+    transform: translateY(-3px);
     box-shadow: 0 5px 15px rgba(0,0,0,0.1);
 }
 
-.author-thumb .image {
+.author-image {
     margin-bottom: 15px;
 }
 
-.author-thumb .image img {
+.author-image img {
     width: 150px;
     height: 150px;
-    object-fit: cover;
     border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid #f8f9fa;
 }
 
-.author-thumb h4 {
-    margin-bottom: 10px;
+.author-card h3 {
+    margin: 0 0 10px 0;
 }
 
-.author-thumb .job-title {
-    font-style: italic;
-    margin-bottom: 10px;
+.author-card h3 a {
+    color: #333;
+    text-decoration: none;
+}
+
+.author-card h3 a:hover {
+    color: #229ac8;
+}
+
+.author-job-title {
     color: #666;
-}
-
-.author-thumb .bio {
-    margin-bottom: 15px;
-    min-height: 60px;
-    color: #555;
-}
-
-.author-thumb .badge {
-    background: #337ab7;
     font-size: 14px;
+    margin-bottom: 10px;
+}
+
+.author-bio {
+    font-size: 13px;
+    line-height: 1.4;
+    color: #555;
     margin-bottom: 15px;
 }
 
-/* Стили для страницы конкретного автора */
+.author-stats {
+    margin-bottom: 15px;
+}
+
+.author-stats .badge {
+    background: #4ab2f1;
+    font-size: 12px;
+}
+
+/* Страница конкретного автора */
 .author-profile {
     margin-bottom: 40px;
 }
@@ -212,7 +345,7 @@
     color: #333;
 }
 
-/* Адаптивность для авторов */
+/* Адаптивность */
 @media (max-width: 768px) {
     .author-header {
         flex-direction: column;
@@ -230,8 +363,74 @@
         height: 150px;
     }
     
-    .author-thumb .image img {
+    .author-image img {
         width: 120px;
         height: 120px;
     }
+    
+    .blog-info h4 {
+        min-height: auto;
+        font-size: 16px;
+    }
+    
+    .blog-description {
+        min-height: auto;
+    }
+    
+    .blog-meta span {
+        display: block;
+        margin-right: 0;
+        margin-bottom: 5px;
+    }
+}
+
+@media (max-width: 576px) {
+    .blog-category-description {
+        padding: 15px;
+        font-size: 14px;
+    }
+    
+    .blog-info {
+        padding: 15px;
+    }
+    
+    .category-item,
+    .subcategory-item {
+        padding: 15px;
+    }
+    
+    .author-card {
+        padding: 15px;
+    }
+}
+
+/* Дополнительные утилиты */
+.text-center {
+    text-align: center;
+}
+
+.text-left {
+    text-align: left;
+}
+
+.text-right {
+    text-align: right;
+}
+
+/* Анимации */
+.blog-item,
+.category-item,
+.subcategory-item,
+.author-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Улучшения для семантической разметки */
+[itemscope] {
+    position: relative;
+}
+
+/* Стили для хлебных крошек в блоге */
+#information-blog-category .breadcrumb {
+    margin-bottom: 20px;
 }

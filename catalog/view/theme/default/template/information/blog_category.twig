@@ -1,4 +1,14 @@
 {{ header }}
+
+{# Микроразметка Schema.org #}
+{% if json_ld %}
+    {% for ld_item in json_ld %}
+    <script type="application/ld+json">
+    {{ ld_item|json_encode(constant('JSON_UNESCAPED_SLASHES') b-or constant('JSON_UNESCAPED_UNICODE'))|raw }}
+    </script>
+    {% endfor %}
+{% endif %}
+
 <div id="information-blog-category" class="container">
   <ul class="breadcrumb">
     {% for breadcrumb in breadcrumbs %}
@@ -31,21 +41,21 @@
           <div class="row">
             {% for author in authors %}
             <div class="col-lg-4 col-md-4 col-sm-6 col-xs-12">
-              <div class="author-card text-center" style="margin-bottom: 30px; padding: 20px; border: 1px solid #eee; border-radius: 8px; height: 100%;">
-                <div class="author-image" style="margin-bottom: 15px;">
-                  <img src="{{ author.image }}" alt="{{ author.name }}" style="width: 150px; height: 150px; border-radius: 50%; object-fit: cover; border: 4px solid #f8f9fa;">
+              <div class="author-card">
+                <div class="author-image">
+                  <img src="{{ author.image }}" alt="{{ author.name }}">
                 </div>
-                <h3 style="margin: 0 0 10px 0;">
-                  <a href="{{ author.href }}" style="color: #333; text-decoration: none;">{{ author.name }}</a>
+                <h3>
+                  <a href="{{ author.href }}">{{ author.name }}</a>
                 </h3>
                 {% if author.job_title %}
-                <p class="author-job-title" style="color: #666; font-size: 14px; margin-bottom: 10px;">{{ author.job_title }}</p>
+                <p class="author-job-title">{{ author.job_title }}</p>
                 {% endif %}
                 {% if author.bio %}
-                <p class="author-bio" style="font-size: 13px; line-height: 1.4; color: #555; margin-bottom: 15px;">{{ author.bio }}</p>
+                <p class="author-bio">{{ author.bio }}</p>
                 {% endif %}
-                <div class="author-stats" style="margin-bottom: 15px;">
-                  <span class="badge" style="background: #4ab2f1; font-size: 12px;">{{ author.total_articles }} {{ text_articles_count }}</span>
+                <div class="author-stats">
+                  <span class="badge">{{ author.total_articles }} {{ text_articles_count }}</span>
                 </div>
                 <a href="{{ author.href }}" class="btn btn-primary">{{ button_view_author }}</a>
               </div>
@@ -65,7 +75,7 @@
         
         {% if thumb %}
         <div class="blog-category-image">
-          <img src="{{ thumb }}" alt="{{ heading_title }}" class="img-responsive" />
+          <img src="{{ thumb }}" alt="{{ heading_title }}" class="img-responsive">
         </div>
         {% endif %}
         
@@ -75,12 +85,13 @@
 
         {# Подкатегории #}
         {% if subcategories %}
-        <div class="blog-subcategories" style="margin: 30px 0;">
+        <div class="blog-subcategories">
+          <h3>{{ text_subcategories }}</h3>
           <div class="row">
             {% for subcategory in subcategories %}
             <div class="col-lg-3 col-md-4 col-sm-6 col-xs-12">
-              <div class="subcategory-item text-center" style="margin-bottom: 20px; padding: 15px; border: 1px solid #eee; border-radius: 5px;">
-                <h4 style="margin: 0;"><a href="{{ subcategory.href }}">{{ subcategory.name }}</a></h4>
+              <div class="subcategory-item text-center">
+                <h4><a href="{{ subcategory.href }}">{{ subcategory.name }}</a></h4>
               </div>
             </div>
             {% endfor %}
@@ -90,25 +101,25 @@
 
         {# Главная страница блога #}
         {% if root_categories and not blog_category_id %}
-        <div class="blog-root-categories" style="margin: 30px 0;">
+        <div class="blog-root-categories">
           <div class="row">
             {% for category in root_categories %}
             <div class="col-lg-4 col-md-4 col-sm-6 col-xs-12">
-              <div class="category-item text-center" style="margin-bottom: 20px; padding: 20px; background: #f9f9f9; border-radius: 5px;">
-                <h3 style="margin: 0 0 10px 0;"><a href="{{ category.href }}">{{ category.name }}</a></h3>
+              <div class="category-item text-center">
+                <h3><a href="{{ category.href }}">{{ category.name }}</a></h3>
               </div>
             </div>
             {% endfor %}
             
             {# Карточка авторов #}
             <div class="col-lg-4 col-md-4 col-sm-6 col-xs-12">
-              <div class="category-item text-center" style="margin-bottom: 20px; padding: 20px; background: #e9f7fe; border-radius: 5px; border: 2px dashed #4ab2f1;">
-                <h3 style="margin: 0 0 10px 0;">
-                  <a href="{{ authors_link }}" style="color: #2a6496;">
-                    <i class="fa fa-users" style="margin-right: 8px;"></i>{{ text_authors }}
+              <div class="category-item authors-card text-center">
+                <h3>
+                  <a href="{{ authors_link }}">
+                    <i class="fa fa-users"></i>{{ text_authors }}
                   </a>
                 </h3>
-                <p style="margin: 0; color: #555; font-size: 13px;">{{ text_authors_description }}</p>
+                <p>{{ text_authors_description }}</p>
               </div>
             </div>
           </div>
@@ -117,32 +128,80 @@
 
         {# Статьи #}
         {% if articles %}
-        <div class="blog-articles" style="margin-top: 30px;">
+        <div class="blog-articles">
           {% if blog_category_id %}
           <h2>{{ text_articles_in_category }}</h2>
           {% endif %}
           <div class="row">
             {% for article in articles %}
-            <div class="col-lg-4 col-md-4 col-sm-6 col-xs-12">
+            <div class="col-lg-4 col-md-4 col-sm-6 col-xs-12" itemscope itemtype="https://schema.org/{{ article.schema_type }}">
               <div class="blog-item">
                 <div class="blog-image">
-                  <a href="{{ article.href }}"><img src="{{ article.image }}" alt="{{ article.title }}" class="img-responsive" /></a>
+                  <a href="{{ article.href }}" itemprop="url">
+                    <img src="{{ article.image }}" alt="{{ article.title }}" class="img-responsive" itemprop="image">
+                  </a>
                 </div>
                 <div class="blog-info">
-                  <h4><a href="{{ article.href }}">{{ article.title }}</a></h4>
-                  <p class="blog-meta">
-                    <span><i class="fa fa-calendar"></i> {{ article.date_added }}</span>
-                    <span><i class="fa fa-eye"></i> {{ article.viewed }} {{ text_views }}</span>
-                    <span><i class="fa fa-clock-o"></i> {{ article.reading_time }} {{ text_reading_time }}</span>
+                  <h4 itemprop="headline">
+                    <a href="{{ article.href }}" itemprop="url">{{ article.title }}</a>
+                  </h4>
+                  <div class="blog-meta">
+                    <span>
+                      <i class="fa fa-calendar"></i> 
+                      <time datetime="{{ article.date_added_iso }}" itemprop="datePublished">{{ article.date_added }}</time>
+                    </span>
+                    <span>
+                      <i class="fa fa-eye"></i> {{ article.viewed }} {{ text_views }}
+                    </span>
+                    <span>
+                      <i class="fa fa-clock-o"></i> {{ article.reading_time }} {{ text_reading_time }}
+                    </span>
+                  </div>
+                  <p class="blog-description" itemprop="description">
+                    {{ article.description }}
                   </p>
-                  <p class="blog-description">{{ article.description }}</p>
-                  <a href="{{ article.href }}" class="btn btn-primary">{{ button_read_more }}</a>
+                  
+                  {# Авторы #}
+                  {% if article.authors and article.schema_type != 'Review' %}
+                  <div class="blog-authors">
+                    <i class="fa fa-user"></i> 
+                    {% for author in article.authors %}
+                      <span itemprop="author" itemscope itemtype="https://schema.org/Person">
+                        <span itemprop="name">{{ author }}</span>
+                      </span>
+                      {% if not loop.last %}, {% endif %}
+                    {% endfor %}
+                  </div>
+                  {% endif %}
+                  
+                  {# Рейтинг для обзоров #}
+                  {% if article.schema_type == 'Review' and article.rating_value %}
+                  <div class="blog-rating">
+                    <div itemprop="reviewRating" itemscope itemtype="https://schema.org/Rating">
+                      <meta itemprop="ratingValue" content="{{ article.rating_value }}">
+                      <meta itemprop="bestRating" content="5">
+                      <div>
+                        {% for i in 1..5 %}
+                          {% if i <= article.rating_value %}
+                            <i class="fa fa-star"></i>
+                          {% else %}
+                            <i class="fa fa-star-o"></i>
+                          {% endif %}
+                        {% endfor %}
+                        <span>({{ article.rating_value }})</span>
+                      </div>
+                    </div>
+                  </div>
+                  {% endif %}
+                  
+                  <a href="{{ article.href }}" class="btn btn-primary" itemprop="url">{{ button_read_more }}</a>
                 </div>
               </div>
             </div>
             {% endfor %}
           </div>
           
+          {# Пагинация #}
           <div class="row">
             <div class="col-sm-6 text-left">{{ pagination }}</div>
             <div class="col-sm-6 text-right">{{ results }}</div>
