@@ -12,7 +12,7 @@ class ControllerInformationBlogCategory extends Controller {
             $author_model_loaded = true;
         }
 
-        // Получаем настройки размеров изображений из конфига модуля
+        // Размеры изображений из конфига
         $article_image_width = $this->config->get('blog_article_image_width') ?: 400;
         $article_image_height = $this->config->get('blog_article_image_height') ?: 300;
         $category_image_width = $this->config->get('blog_category_image_width') ?: 800;
@@ -175,23 +175,30 @@ class ControllerInformationBlogCategory extends Controller {
                 return $this->load->controller('error/not_found');
             }
         } else {
-            // Главная блога - получаем SEO данные из таблицы blog_home_description
+            // Главная блога - получаем SEO данные
             $blog_home_data = $this->getBlogHomeData();
             
-            $this->document->setTitle($blog_home_data['meta_title']);
-            $this->document->setDescription($blog_home_data['meta_description']);
-            $this->document->setKeywords($blog_home_data['meta_keyword']);
+            $this->document->setTitle($blog_home_data['meta_title'] ?: 'Блог');
+            $this->document->setDescription($blog_home_data['meta_description'] ?: '');
+            $this->document->setKeywords($blog_home_data['meta_keyword'] ?: '');
             
             if ($blog_home_data['h1']) {
                 $data['heading_title'] = $blog_home_data['h1'];
             } else {
-                $data['heading_title'] = $blog_home_data['name'];
+                $data['heading_title'] = $blog_home_data['name'] ?: 'Блог';
             }
             
-            $data['description'] = html_entity_decode($blog_home_data['description'], ENT_QUOTES, 'UTF-8');
-            
+            $data['description'] = html_entity_decode($blog_home_data['description'] ?: '', ENT_QUOTES, 'UTF-8');
+
+            $data['breadcrumbs'] = [];
+
             $data['breadcrumbs'][] = [
-                'text' => $blog_home_data['name'],
+                'text' => $this->language->get('text_home'),
+                'href' => $this->url->link('common/home', '', true)
+            ];
+
+            $data['breadcrumbs'][] = [
+                'text' => $blog_home_data['name'] ?: 'Блог',
                 'href' => ''
             ];
 
@@ -307,7 +314,6 @@ class ControllerInformationBlogCategory extends Controller {
             return $query->row;
         }
         
-        // Возвращаем данные по умолчанию
         return array(
             'name' => 'Блог',
             'h1' => 'Блог',
@@ -318,9 +324,7 @@ class ControllerInformationBlogCategory extends Controller {
         );
     }
 
-    // Остальные методы (generateSchemaMarkup, cleanTextForSchema, getCurrentUrl, getAbsoluteUrl) остаются без изменений
     private function generateSchemaMarkup($data, $category_info = null, $blog_category_id = 0) {
-        // ... существующий код без изменений ...
         $json_ld = [];
         $base_url = HTTP_SERVER;
         $current_url = $this->getCurrentUrl($blog_category_id);
@@ -354,7 +358,7 @@ class ControllerInformationBlogCategory extends Controller {
 
         $json_ld['breadcrumb'] = $breadcrumb_list;
 
-        // WebPage для страницы категории
+        // WebPage
         $web_page = [
             '@context' => 'https://schema.org',
             '@type' => 'WebPage',
@@ -363,7 +367,7 @@ class ControllerInformationBlogCategory extends Controller {
             'description' => isset($category_info['description']) ? $this->cleanTextForSchema(html_entity_decode($category_info['description'], ENT_QUOTES, 'UTF-8')) : '',
         ];
 
-        // ItemList для статей
+        // ItemList
         $item_list = [
             '@context' => 'https://schema.org',
             '@type' => 'ItemList',
@@ -377,21 +381,14 @@ class ControllerInformationBlogCategory extends Controller {
             $article_type = $article['schema_type'];
             $clean_description = $this->cleanTextForSchema($article['full_description']);
             
-            // Раздельная логика для Organization и других типов
             if ($article_type === 'Organization') {
-                // Для Organization используем правильные свойства
                 $article_data = [
                     '@type' => $article_type,
-                    'name' => $article['title'], // используем name вместо headline
+                    'name' => $article['title'],
                     'description' => $clean_description,
                     'url' => $article['href']
                 ];
-                
-                // Для Organization не включаем даты публикации, так как они невалидны
-                // Также не включаем mainEntityOfPage и publisher для Organization
-                
             } else {
-                // Для статей блога, новостей, обзоров
                 $article_data = [
                     '@type' => $article_type,
                     'headline' => $article['title'],
@@ -409,7 +406,6 @@ class ControllerInformationBlogCategory extends Controller {
                     $article_data['image'] = $article['image'];
                 }
 
-                // Авторы только для статей, новостей и обзоров
                 if (!empty($article['authors_data'])) {
                     $authors = [];
                     foreach ($article['authors_data'] as $author) {
@@ -436,7 +432,6 @@ class ControllerInformationBlogCategory extends Controller {
                     $article_data['author'] = count($authors) === 1 ? $authors[0] : $authors;
                 }
 
-                // Publisher для статей
                 $article_data['publisher'] = [
                     '@type' => 'Organization',
                     'name' => $this->config->get('config_name'),
@@ -446,7 +441,6 @@ class ControllerInformationBlogCategory extends Controller {
                     ]
                 ];
 
-                // Review rating только для обзоров
                 if ($article_type === 'Review' && $article['rating_value'] !== null) {
                     $article_data['reviewRating'] = [
                         '@type' => 'Rating',

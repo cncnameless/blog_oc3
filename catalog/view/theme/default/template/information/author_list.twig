@@ -1,8 +1,24 @@
 {{ header }}
+
+{# Разделенная микроразметка Schema.org для страницы списка авторов #}
+{% if microdata %}
+    {% for key, schema_block in microdata %}
+    <script type="application/ld+json">
+    {{ schema_block|json_encode(constant('JSON_UNESCAPED_SLASHES') b-or constant('JSON_UNESCAPED_UNICODE') b-or constant('JSON_PRETTY_PRINT')) }}
+    </script>
+    {% endfor %}
+{% endif %}
+
 <div class="container">
   <ul class="breadcrumb">
     {% for breadcrumb in breadcrumbs %}
-    <li><a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+    <li>
+      {% if breadcrumb.href %}
+        <a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a>
+      {% else %}
+        {{ breadcrumb.text }}
+      {% endif %}
+    </li>
     {% endfor %}
   </ul>
   <div class="row">{{ column_left }}
@@ -27,7 +43,7 @@
           <div class="author-thumb text-center">
             <div class="image">
               <a href="{{ author.href }}">
-                <img src="{{ author.thumb }}" alt="{{ author.name }}" title="{{ author.name }}" class="img-responsive img-circle" />
+                <img src="{{ author.image }}" alt="{{ author.name }}" title="{{ author.name }}" class="img-responsive img-circle" />
               </a>
             </div>
             <div class="caption">
@@ -38,15 +54,15 @@
               {% if author.bio %}
               <p class="bio">{{ author.bio }}</p>
               {% endif %}
-              <p class="article-count">{{ text_article_count|format(author.article_count) }}</p>
-              <a href="{{ author.href }}" class="btn btn-primary">{{ text_all_authors }}</a>
+              <p class="article-count">{{ text_articles_count|format(author.total_articles) }}</p>
+              <a href="{{ author.href }}" class="btn btn-primary">{{ button_view_author }}</a>
             </div>
           </div>
         </div>
         {% endfor %}
       </div>
       {% else %}
-      <p>Авторы не найдены.</p>
+      <p>{{ text_no_authors }}</p>
       {% endif %}
       {{ content_bottom }}</div>
     {{ column_right }}</div>

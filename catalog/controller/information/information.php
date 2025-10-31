@@ -65,7 +65,7 @@ class ControllerInformationInformation extends Controller {
                 }
             }
 
-            // Сама статья всегда без ссылки
+            // ИСПРАВЛЕНИЕ: Последняя крошка без ссылки
             $data['breadcrumbs'][] = array(
                 'text' => $information_info['title'],
                 'href' => ''
@@ -84,11 +84,16 @@ class ControllerInformationInformation extends Controller {
                 $authors_data = $this->model_catalog_author->getAuthorsByInformation($information_id);
                 $data['authors'] = array();
 
+                // ИСПРАВЛЕНИЕ: Добавляем настройки размеров аватаров
+                $author_article_width = $this->config->get('blog_author_article_width') ?: 80;
+                $author_article_height = $this->config->get('blog_author_article_height') ?: 80;
+
                 foreach ($authors_data as $author) {
+                    // ИСПРАВЛЕНИЕ: Используем настройки размеров для аватаров
                     if ($author['image'] && file_exists(DIR_IMAGE . $author['image'])) {
-                        $image = $this->model_tool_image->resize($author['image'], 80, 80);
+                        $image = $this->model_tool_image->resize($author['image'], $author_article_width, $author_article_height);
                     } else {
-                        $image = $this->model_tool_image->resize('placeholder.png', 80, 80);
+                        $image = $this->model_tool_image->resize('placeholder.png', $author_article_width, $author_article_height);
                     }
 
                     $data['authors'][] = array(
@@ -139,6 +144,7 @@ class ControllerInformationInformation extends Controller {
                 'href' => $this->url->link('common/home', '', true)
             );
 
+            // ИСПРАВЛЕНИЕ: Последняя крошка без ссылки
             $data['breadcrumbs'][] = array(
                 'text' => $this->language->get('text_error'),
                 'href' => ''

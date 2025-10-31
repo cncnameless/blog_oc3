@@ -137,7 +137,8 @@ class ModelCatalogAuthor extends Model {
             $sql = "SELECT a.*, ad.name, ad.job_title, ad.bio, ad.description,
                            a.company_employee, a.affiliation, a.knows_about, a.knows_language, a.same_as,
                            (SELECT COUNT(*) FROM " . DB_PREFIX . "information_to_author i2a 
-                            WHERE i2a.author_id = a.author_id) as article_count
+                            LEFT JOIN " . DB_PREFIX . "information i ON (i2a.information_id = i.information_id)
+                            WHERE i2a.author_id = a.author_id AND i.status = '1') as article_count
                     FROM " . DB_PREFIX . "article_author a 
                     LEFT JOIN " . DB_PREFIX . "article_author_description ad ON (a.author_id = ad.author_id) 
                     WHERE a.status = '1' 

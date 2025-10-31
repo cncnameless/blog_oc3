@@ -9,6 +9,7 @@ $_['meta_keyword'] = 'авторы, эксперты, блог';
 $_['text_blog'] = 'Блог';
 $_['text_authors'] = 'Авторы';
 $_['text_no_authors'] = 'Авторы не найдены';
+$_['text_no_articles'] = 'Статьи не найдены';
 $_['text_home'] = 'Главная';
 $_['text_articles_count'] = '%d статей';
 $_['text_views'] = 'просмотров';

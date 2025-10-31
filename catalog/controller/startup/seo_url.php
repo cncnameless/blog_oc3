@@ -54,14 +54,19 @@ class ControllerStartupSeoUrl extends Controller {
 		if (isset($this->request->get['_route_'])) {
 			$route = $this->request->get['_route_'];
 			
-			if ($route == 'blog') {
+			// ИСПРАВЛЕНИЕ: Более точная проверка для главной блога
+			if ($route == 'blog' || $route == 'blog/') {
 				$this->request->get['route'] = 'information/blog_category';
 				unset($this->request->get['_route_']);
+				// Убедимся, что нет редиректа
+				$this->request->get['disable_redirect'] = true;
 			}
 			
-			if ($route == 'blog/authors') {
+			if ($route == 'blog/authors' || $route == 'blog/authors/') {
 				$this->request->get['route'] = 'information/author';
 				unset($this->request->get['_route_']);
+				// Убедимся, что нет редиректа
+				$this->request->get['disable_redirect'] = true;
 			}
 		}
 
@@ -173,8 +178,12 @@ class ControllerStartupSeoUrl extends Controller {
 		}
 
 		// ПРОВЕРКА И РЕДИРЕКТ ДЛЯ ЧИСТЫХ URL
-		if ($this->request->server['REQUEST_METHOD'] == 'POST') return;
-		if (isset($this->request->server['HTTP_X_REQUESTED_WITH']) && utf8_strtolower($this->request->server['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') return;
+		// ИСПРАВЛЕНИЕ: Отключаем редирект для главной блога и страницы авторов
+		if (isset($this->request->get['disable_redirect']) || 
+			$this->request->server['REQUEST_METHOD'] == 'POST' || 
+			(isset($this->request->server['HTTP_X_REQUESTED_WITH']) && utf8_strtolower($this->request->server['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest')) {
+			return;
+		}
 
 		$original_url = $this->config->get('config_secure') ? $this->config->get('config_ssl') : $this->config->get('config_url');
 		$original_request = $this->request->server['REQUEST_URI'];
@@ -188,12 +197,17 @@ class ControllerStartupSeoUrl extends Controller {
 
 		$params = array();
 		foreach ($this->request->get as $key => $value) {
-			if ($key != 'route') {
+			if ($key != 'route' && $key != 'disable_redirect') {
 				$params[$key] = is_array($value) ? $value : html_entity_decode($value, ENT_QUOTES, 'UTF-8');
 			}
 		}
 
-		if ($this->request->get['route'] != 'error/not_found') {
+		// ИСПРАВЛЕНИЕ: Отключаем редирект для главной блога и страницы авторов
+		$current_route = isset($this->request->get['route']) ? $this->request->get['route'] : '';
+		$is_blog_home = ($current_route == 'information/blog_category' && empty($params));
+		$is_authors_page = ($current_route == 'information/author' && empty($params));
+		
+		if (!$is_blog_home && !$is_authors_page && $this->request->get['route'] != 'error/not_found') {
 			$seo_url = $this->url->link($this->request->get['route'], http_build_query($params), $this->config->get('config_secure'));
 			
 			// УБИРАЕМ ПАРАМЕТРЫ ИЗ SEO_URL ДЛЯ ЧИСТОТЫ
