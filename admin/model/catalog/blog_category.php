@@ -7,12 +7,26 @@ class ModelCatalogBlogCategory extends Model {
             return false;
         }
 
-        $this->db->query("INSERT INTO " . DB_PREFIX . "blog_category SET parent_id = '" . (int)$data['parent_id'] . "', sort_order = '" . (int)$data['sort_order'] . "', status = '" . (int)$data['status'] . "', date_added = NOW(), date_modified = NOW()");
+        // ДОБАВЛЕНО: Сохранение изображения
+        $this->db->query("INSERT INTO " . DB_PREFIX . "blog_category SET 
+            parent_id = '" . (int)$data['parent_id'] . "', 
+            sort_order = '" . (int)$data['sort_order'] . "', 
+            status = '" . (int)$data['status'] . "', 
+            image = '" . $this->db->escape($data['image']) . "', 
+            date_added = NOW(), 
+            date_modified = NOW()");
 
         $blog_category_id = $this->db->getLastId();
 
         foreach ($data['blog_category_description'] as $language_id => $value) {
-            $this->db->query("INSERT INTO " . DB_PREFIX . "blog_category_description SET blog_category_id = '" . (int)$blog_category_id . "', language_id = '" . (int)$language_id . "', name = '" . $this->db->escape($value['name']) . "', description = '" . $this->db->escape($value['description']) . "', meta_title = '" . $this->db->escape($value['meta_title']) . "', meta_description = '" . $this->db->escape($value['meta_description']) . "', meta_keyword = '" . $this->db->escape($value['meta_keyword']) . "'");
+            $this->db->query("INSERT INTO " . DB_PREFIX . "blog_category_description SET 
+                blog_category_id = '" . (int)$blog_category_id . "', 
+                language_id = '" . (int)$language_id . "', 
+                name = '" . $this->db->escape($value['name']) . "', 
+                description = '" . $this->db->escape($value['description']) . "', 
+                meta_title = '" . $this->db->escape($value['meta_title']) . "', 
+                meta_description = '" . $this->db->escape($value['meta_description']) . "', 
+                meta_keyword = '" . $this->db->escape($value['meta_keyword']) . "'");
         }
 
         // MySQL Hierarchical Data Closure Table Pattern
@@ -24,11 +38,17 @@ class ModelCatalogBlogCategory extends Model {
             $query = $this->db->query("SELECT * FROM `" . DB_PREFIX . "blog_category_path` WHERE blog_category_id = '" . (int)$data['parent_id'] . "' ORDER BY `level` ASC");
 
             foreach ($query->rows as $result) {
-                $this->db->query("INSERT INTO `" . DB_PREFIX . "blog_category_path` SET `blog_category_id` = '" . (int)$blog_category_id . "', `path_id` = '" . (int)$result['path_id'] . "', `level` = '" . (int)$level . "'");
+                $this->db->query("INSERT INTO `" . DB_PREFIX . "blog_category_path` SET 
+                    `blog_category_id` = '" . (int)$blog_category_id . "', 
+                    `path_id` = '" . (int)$result['path_id'] . "', 
+                    `level` = '" . (int)$level . "'");
                 $level++;
             }
 
-            $this->db->query("INSERT INTO `" . DB_PREFIX . "blog_category_path` SET `blog_category_id` = '" . (int)$blog_category_id . "', `path_id` = '" . (int)$blog_category_id . "', `level` = '" . (int)$level . "'");
+            $this->db->query("INSERT INTO `" . DB_PREFIX . "blog_category_path` SET 
+                `blog_category_id` = '" . (int)$blog_category_id . "', 
+                `path_id` = '" . (int)$blog_category_id . "', 
+                `level` = '" . (int)$level . "'");
         }
 
         // Добавляем SEO URL
@@ -36,7 +56,11 @@ class ModelCatalogBlogCategory extends Model {
             foreach ($data['blog_category_seo_url'] as $store_id => $language) {
                 foreach ($language as $language_id => $keyword) {
                     if (!empty($keyword)) {
-                        $this->db->query("INSERT INTO " . DB_PREFIX . "seo_url SET store_id = '" . (int)$store_id . "', language_id = '" . (int)$language_id . "', query = 'blog_category_id=" . (int)$blog_category_id . "', keyword = '" . $this->db->escape($keyword) . "'");
+                        $this->db->query("INSERT INTO " . DB_PREFIX . "seo_url SET 
+                            store_id = '" . (int)$store_id . "', 
+                            language_id = '" . (int)$language_id . "', 
+                            query = 'blog_category_id=" . (int)$blog_category_id . "', 
+                            keyword = '" . $this->db->escape($keyword) . "'");
                     }
                 }
             }
@@ -48,12 +72,26 @@ class ModelCatalogBlogCategory extends Model {
     }
 
     public function editBlogCategory($blog_category_id, $data) {
-        $this->db->query("UPDATE " . DB_PREFIX . "blog_category SET parent_id = '" . (int)$data['parent_id'] . "', sort_order = '" . (int)$data['sort_order'] . "', status = '" . (int)$data['status'] . "', date_modified = NOW() WHERE blog_category_id = '" . (int)$blog_category_id . "'");
+        // ДОБАВЛЕНО: Обновление изображения
+        $this->db->query("UPDATE " . DB_PREFIX . "blog_category SET 
+            parent_id = '" . (int)$data['parent_id'] . "', 
+            sort_order = '" . (int)$data['sort_order'] . "', 
+            status = '" . (int)$data['status'] . "', 
+            image = '" . $this->db->escape($data['image']) . "', 
+            date_modified = NOW() 
+            WHERE blog_category_id = '" . (int)$blog_category_id . "'");
 
         $this->db->query("DELETE FROM " . DB_PREFIX . "blog_category_description WHERE blog_category_id = '" . (int)$blog_category_id . "'");
 
         foreach ($data['blog_category_description'] as $language_id => $value) {
-            $this->db->query("INSERT INTO " . DB_PREFIX . "blog_category_description SET blog_category_id = '" . (int)$blog_category_id . "', language_id = '" . (int)$language_id . "', name = '" . $this->db->escape($value['name']) . "', description = '" . $this->db->escape($value['description']) . "', meta_title = '" . $this->db->escape($value['meta_title']) . "', meta_description = '" . $this->db->escape($value['meta_description']) . "', meta_keyword = '" . $this->db->escape($value['meta_keyword']) . "'");
+            $this->db->query("INSERT INTO " . DB_PREFIX . "blog_category_description SET 
+                blog_category_id = '" . (int)$blog_category_id . "', 
+                language_id = '" . (int)$language_id . "', 
+                name = '" . $this->db->escape($value['name']) . "', 
+                description = '" . $this->db->escape($value['description']) . "', 
+                meta_title = '" . $this->db->escape($value['meta_title']) . "', 
+                meta_description = '" . $this->db->escape($value['meta_description']) . "', 
+                meta_keyword = '" . $this->db->escape($value['meta_keyword']) . "'");
         }
 
         // Очищаем старые SEO URL
@@ -64,7 +102,11 @@ class ModelCatalogBlogCategory extends Model {
             foreach ($data['blog_category_seo_url'] as $store_id => $language) {
                 foreach ($language as $language_id => $keyword) {
                     if (!empty($keyword)) {
-                        $this->db->query("INSERT INTO " . DB_PREFIX . "seo_url SET store_id = '" . (int)$store_id . "', language_id = '" . (int)$language_id . "', query = 'blog_category_id=" . (int)$blog_category_id . "', keyword = '" . $this->db->escape($keyword) . "'");
+                        $this->db->query("INSERT INTO " . DB_PREFIX . "seo_url SET 
+                            store_id = '" . (int)$store_id . "', 
+                            language_id = '" . (int)$language_id . "', 
+                            query = 'blog_category_id=" . (int)$blog_category_id . "', 
+                            keyword = '" . $this->db->escape($keyword) . "'");
                     }
                 }
             }
@@ -102,7 +144,10 @@ class ModelCatalogBlogCategory extends Model {
                 $level = 0;
 
                 foreach ($path as $path_id) {
-                    $this->db->query("REPLACE INTO `" . DB_PREFIX . "blog_category_path` SET blog_category_id = '" . (int)$blog_category_id . "', `path_id` = '" . (int)$path_id . "', level = '" . (int)$level . "'");
+                    $this->db->query("REPLACE INTO `" . DB_PREFIX . "blog_category_path` SET 
+                        blog_category_id = '" . (int)$blog_category_id . "', 
+                        `path_id` = '" . (int)$path_id . "', 
+                        level = '" . (int)$level . "'");
                     $level++;
                 }
             } else {
@@ -123,7 +168,10 @@ class ModelCatalogBlogCategory extends Model {
                 $level = 0;
 
                 foreach ($path as $path_id) {
-                    $this->db->query("INSERT INTO `" . DB_PREFIX . "blog_category_path` SET blog_category_id = '" . (int)$blog_category_id . "', `path_id` = '" . (int)$path_id . "', level = '" . (int)$level . "'");
+                    $this->db->query("INSERT INTO `" . DB_PREFIX . "blog_category_path` SET 
+                        blog_category_id = '" . (int)$blog_category_id . "', 
+                        `path_id` = '" . (int)$path_id . "', 
+                        level = '" . (int)$level . "'");
                     $level++;
                 }
             }

@@ -46,7 +46,13 @@ class ControllerInformationBlogCategory extends Controller {
 
                 $data['heading_title'] = $category_info['name'];
                 $data['description'] = html_entity_decode($category_info['description'], ENT_QUOTES, 'UTF-8');
-                $data['thumb'] = $category_info['image'] ? $this->model_tool_image->resize($category_info['image'], $category_image_width, $category_image_height) : '';
+                
+                // ИСПРАВЛЕНИЕ: Добавляем обработку изображения категории
+                if ($category_info['image']) {
+                    $data['thumb'] = $this->model_tool_image->resize($category_info['image'], $category_image_width, $category_image_height);
+                } else {
+                    $data['thumb'] = '';
+                }
 
                 $data['breadcrumbs'][] = [
                     'text' => $this->language->get('text_blog'),
@@ -95,7 +101,12 @@ class ControllerInformationBlogCategory extends Controller {
                 $results = $this->model_catalog_information->getInformationsByBlogCategory($filter_data);
 
                 foreach ($results as $result) {
-                    $image = $this->model_tool_image->resize('placeholder.png', $article_image_width, $article_image_height);
+                    // ИСПРАВЛЕНИЕ: Правильная обработка изображений статей
+                    if ($result['image'] && is_file(DIR_IMAGE . $result['image'])) {
+                        $image = $this->model_tool_image->resize($result['image'], $article_image_width, $article_image_height);
+                    } else {
+                        $image = $this->model_tool_image->resize('placeholder.png', $article_image_width, $article_image_height);
+                    }
                     
                     $author_names = [];
                     $authors_data = [];
@@ -111,7 +122,7 @@ class ControllerInformationBlogCategory extends Controller {
                                 $author_names[] = $author['name'];
                                 
                                 $author_image = '';
-                                if (!empty($author['image']) && file_exists(DIR_IMAGE . $author['image'])) {
+                                if (!empty($author['image']) && is_file(DIR_IMAGE . $author['image'])) {
                                     $author_image = $this->model_tool_image->resize($author['image'], $author_article_width, $author_article_height);
                                 } else {
                                     $author_image = $this->model_tool_image->resize('placeholder.png', $author_article_width, $author_article_height);
@@ -189,6 +200,7 @@ class ControllerInformationBlogCategory extends Controller {
             }
             
             $data['description'] = html_entity_decode($blog_home_data['description'] ?: '', ENT_QUOTES, 'UTF-8');
+            $data['thumb'] = ''; // На главной нет изображения категории
 
             $data['breadcrumbs'] = [];
 
@@ -228,7 +240,12 @@ class ControllerInformationBlogCategory extends Controller {
             $results = $this->model_catalog_information->getBlogArticles($filter_data);
 
             foreach ($results as $result) {
-                $image = $this->model_tool_image->resize('placeholder.png', $article_image_width, $article_image_height);
+                // ИСПРАВЛЕНИЕ: Правильная обработка изображений статей для главной страницы
+                if ($result['image'] && is_file(DIR_IMAGE . $result['image'])) {
+                    $image = $this->model_tool_image->resize($result['image'], $article_image_width, $article_image_height);
+                } else {
+                    $image = $this->model_tool_image->resize('placeholder.png', $article_image_width, $article_image_height);
+                }
                 
                 $author_names = [];
                 $authors_data = [];
@@ -244,7 +261,7 @@ class ControllerInformationBlogCategory extends Controller {
                             $author_names[] = $author['name'];
                             
                             $author_image = '';
-                            if (!empty($author['image']) && file_exists(DIR_IMAGE . $author['image'])) {
+                            if (!empty($author['image']) && is_file(DIR_IMAGE . $author['image'])) {
                                 $author_image = $this->model_tool_image->resize($author['image'], $author_article_width, $author_article_height);
                             } else {
                                 $author_image = $this->model_tool_image->resize('placeholder.png', $author_article_width, $author_article_height);
@@ -402,6 +419,7 @@ class ControllerInformationBlogCategory extends Controller {
                     ]
                 ];
 
+                // ИСПРАВЛЕНИЕ: Правильная проверка изображения статьи
                 if ($article['image'] && $article['image'] != $this->model_tool_image->resize('placeholder.png', $this->config->get('blog_article_image_width') ?: 400, $this->config->get('blog_article_image_height') ?: 300)) {
                     $article_data['image'] = $article['image'];
                 }
@@ -422,6 +440,7 @@ class ControllerInformationBlogCategory extends Controller {
                             $author_data['url'] = $author['href'];
                         }
                         
+                        // ИСПРАВЛЕНИЕ: Правильная проверка изображения автора
                         if (!empty($author['image']) && $author['image'] != $this->model_tool_image->resize('placeholder.png', $this->config->get('blog_author_article_width') ?: 80, $this->config->get('blog_author_article_height') ?: 80)) {
                             $author_data['image'] = $author['image'];
                         }

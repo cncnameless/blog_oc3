@@ -74,6 +74,15 @@ class ControllerInformationInformation extends Controller {
             $data['heading_title'] = $information_info['title'];
             $data['description'] = html_entity_decode($information_info['description'], ENT_QUOTES, 'UTF-8');
 
+            // ДОБАВЛЯЕМ: Загрузка изображения статьи
+            if ($information_info['image']) {
+                $article_image_width = $this->config->get('blog_article_image_width') ?: 800;
+                $article_image_height = $this->config->get('blog_article_image_height') ?: 400;
+                $data['image'] = $this->model_tool_image->resize($information_info['image'], $article_image_width, $article_image_height);
+            } else {
+                $data['image'] = '';
+            }
+
             // Данные для статей блога
             if ($blog_categories) {
                 $data['date_added'] = date($this->language->get('date_format_short'), strtotime($information_info['date_added']));

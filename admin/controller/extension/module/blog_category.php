@@ -9,11 +9,15 @@ class ControllerExtensionModuleBlogCategory extends Controller {
         $this->load->model('localisation/language');
 
         if (($this->request->server['REQUEST_METHOD'] == 'POST') && $this->validate()) {
-            $this->model_setting_setting->editSetting('module_blog_category', $this->request->post);
+            // Сохраняем основные настройки модуля
+            $this->model_setting_setting->editSetting('blog_category', $this->request->post);
+            
+            // Сохраняем настройки размеров изображений отдельно
+            $this->saveImageSettings($this->request->post);
             
             // Сохраняем SEO URL для главной блога
-            if (isset($this->request->post['module_blog_category_main_keyword'])) {
-                $this->saveBlogMainSeoUrl($this->request->post['module_blog_category_main_keyword']);
+            if (isset($this->request->post['blog_category_main_keyword'])) {
+                $this->saveBlogMainSeoUrl($this->request->post['blog_category_main_keyword']);
             }
             
             // Сохраняем SEO данные для главной блога
@@ -41,17 +45,17 @@ class ControllerExtensionModuleBlogCategory extends Controller {
         $data['user_token'] = $this->session->data['user_token'];
         
         // Основные настройки
-        if (isset($this->request->post['module_blog_category_status'])) {
-            $data['module_blog_category_status'] = $this->request->post['module_blog_category_status'];
+        if (isset($this->request->post['blog_category_status'])) {
+            $data['blog_category_status'] = $this->request->post['blog_category_status'];
         } else {
-            $data['module_blog_category_status'] = $this->config->get('module_blog_category_status');
+            $data['blog_category_status'] = $this->config->get('blog_category_status');
         }
         
         // SEO URL главной блога
-        if (isset($this->request->post['module_blog_category_main_keyword'])) {
-            $data['module_blog_category_main_keyword'] = $this->request->post['module_blog_category_main_keyword'];
+        if (isset($this->request->post['blog_category_main_keyword'])) {
+            $data['blog_category_main_keyword'] = $this->request->post['blog_category_main_keyword'];
         } else {
-            $data['module_blog_category_main_keyword'] = $this->getBlogMainKeyword();
+            $data['blog_category_main_keyword'] = $this->getBlogMainKeyword();
         }
 
         // Загружаем языки
@@ -66,7 +70,6 @@ class ControllerExtensionModuleBlogCategory extends Controller {
                 'h1' => $home_data['h1'],
                 'meta_title' => $home_data['meta_title'],
                 'meta_description' => $home_data['meta_description'],
-                'meta_keyword' => $home_data['meta_keyword'],
                 'description' => $home_data['description']
             );
         }
@@ -80,7 +83,6 @@ class ControllerExtensionModuleBlogCategory extends Controller {
                 'h1' => $author_list_data['h1'],
                 'meta_title' => $author_list_data['meta_title'],
                 'meta_description' => $author_list_data['meta_description'],
-                'meta_keyword' => $author_list_data['meta_keyword'],
                 'description' => $author_list_data['description']
             );
         }
@@ -99,7 +101,29 @@ class ControllerExtensionModuleBlogCategory extends Controller {
                 $data[$setting] = $this->request->post[$setting];
             } else {
                 $data[$setting] = $this->config->get($setting);
+                // Устанавливаем значения по умолчанию, если настройка не найдена
+                if ($data[$setting] === null) {
+                    $defaults = array(
+                        'blog_author_article_width' => 80,
+                        'blog_author_article_height' => 80,
+                        'blog_author_page_width' => 400,
+                        'blog_author_page_height' => 400,
+                        'blog_author_list_image_width' => 300,
+                        'blog_author_list_image_height' => 300,
+                        'blog_article_image_width' => 400,
+                        'blog_article_image_height' => 300,
+                        'blog_category_image_width' => 800,
+                        'blog_category_image_height' => 400
+                    );
+                    $data[$setting] = isset($defaults[$setting]) ? $defaults[$setting] : '';
+                }
             }
+        }
+
+        if (isset($this->error['warning'])) {
+            $data['error_warning'] = $this->error['warning'];
+        } else {
+            $data['error_warning'] = '';
         }
 
         $data['header'] = $this->load->controller('common/header');
@@ -124,6 +148,23 @@ class ControllerExtensionModuleBlogCategory extends Controller {
             $this->error['warning'] = $this->language->get('error_permission');
         }
         return !$this->error;
+    }
+    
+    private function saveImageSettings($data) {
+        $image_settings = array(
+            'blog_author_article_width', 'blog_author_article_height',
+            'blog_author_page_width', 'blog_author_page_height',
+            'blog_author_list_image_width', 'blog_author_list_image_height',
+            'blog_article_image_width', 'blog_article_image_height',
+            'blog_category_image_width', 'blog_category_image_height'
+        );
+        
+        foreach ($image_settings as $setting) {
+            if (isset($data[$setting])) {
+                $this->db->query("DELETE FROM `" . DB_PREFIX . "setting` WHERE `code` = 'blog_category' AND `key` = '" . $this->db->escape($setting) . "'");
+                $this->db->query("INSERT INTO `" . DB_PREFIX . "setting` SET `store_id` = 0, `code` = 'blog_category', `key` = '" . $this->db->escape($setting) . "', `value` = '" . $this->db->escape($data[$setting]) . "'");
+            }
+        }
     }
     
     private function saveBlogMainSeoUrl($keyword) {
@@ -160,7 +201,6 @@ class ControllerExtensionModuleBlogCategory extends Controller {
                 h1 = '" . $this->db->escape($values['h1']) . "',
                 meta_title = '" . $this->db->escape($values['meta_title']) . "',
                 meta_description = '" . $this->db->escape($values['meta_description']) . "',
-                meta_keyword = '" . $this->db->escape($values['meta_keyword']) . "',
                 description = '" . $this->db->escape($values['description']) . "'");
         }
     }
@@ -173,7 +213,6 @@ class ControllerExtensionModuleBlogCategory extends Controller {
                 h1 = '" . $this->db->escape($values['h1']) . "',
                 meta_title = '" . $this->db->escape($values['meta_title']) . "',
                 meta_description = '" . $this->db->escape($values['meta_description']) . "',
-                meta_keyword = '" . $this->db->escape($values['meta_keyword']) . "',
                 description = '" . $this->db->escape($values['description']) . "'");
         }
     }
@@ -190,7 +229,6 @@ class ControllerExtensionModuleBlogCategory extends Controller {
             'h1' => 'Блог',
             'meta_title' => 'Блог',
             'meta_description' => '',
-            'meta_keyword' => '',
             'description' => ''
         );
     }
@@ -207,7 +245,6 @@ class ControllerExtensionModuleBlogCategory extends Controller {
             'h1' => 'Наши авторы',
             'meta_title' => 'Авторы',
             'meta_description' => '',
-            'meta_keyword' => '',
             'description' => ''
         );
     }

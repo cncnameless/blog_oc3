@@ -211,7 +211,6 @@ class ModelExtensionModuleBlogCategory extends Model {
                     h1 = 'Блог', 
                     meta_title = 'Блог',
                     meta_description = 'Читайте интересные статьи и новости в нашем блоге',
-                    meta_keyword = 'блог, статьи, новости',
                     description = 'Добро пожаловать в наш блог!'");
             }
         }
@@ -226,10 +225,108 @@ class ModelExtensionModuleBlogCategory extends Model {
                     h1 = 'Наши авторы',
                     meta_title = 'Авторы',
                     meta_description = 'Познакомьтесь с нашими авторами - экспертами в своей области',
-                    meta_keyword = 'авторы, эксперты, блог',
                     description = 'Наша команда авторов'");
             }
         }
+    }
+
+    /**
+     * Сохраняет настройки размеров изображений
+     */
+    public function saveImageSettings($data) {
+        $image_settings = [
+            'blog_author_article_width', 'blog_author_article_height',
+            'blog_author_page_width', 'blog_author_page_height',
+            'blog_author_list_image_width', 'blog_author_list_image_height',
+            'blog_article_image_width', 'blog_article_image_height',
+            'blog_category_image_width', 'blog_category_image_height'
+        ];
+        
+        foreach ($image_settings as $setting) {
+            if (isset($data[$setting])) {
+                // Удаляем старую настройку
+                $this->db->query("DELETE FROM `" . DB_PREFIX . "setting` WHERE `code` = 'blog_category' AND `key` = '" . $this->db->escape($setting) . "'");
+                
+                // Добавляем новую настройку
+                $this->db->query("INSERT INTO `" . DB_PREFIX . "setting` SET 
+                    `store_id` = 0, 
+                    `code` = 'blog_category', 
+                    `key` = '" . $this->db->escape($setting) . "', 
+                    `value` = '" . $this->db->escape($data[$setting]) . "', 
+                    `serialized` = 0");
+            }
+        }
+        
+        // Очищаем кэш настроек
+        $this->cache->delete('setting');
+    }
+
+    /**
+     * Сохраняет SEO данные главной страницы блога
+     */
+    public function saveBlogHomeData($data) {
+        foreach ($data as $language_id => $values) {
+            $this->db->query("REPLACE INTO " . DB_PREFIX . "blog_home_description SET 
+                language_id = '" . (int)$language_id . "',
+                name = '" . $this->db->escape($values['name']) . "',
+                h1 = '" . $this->db->escape($values['h1']) . "',
+                meta_title = '" . $this->db->escape($values['meta_title']) . "',
+                meta_description = '" . $this->db->escape($values['meta_description']) . "',
+                description = '" . $this->db->escape($values['description']) . "'");
+        }
+    }
+
+    /**
+     * Сохраняет SEO данные страницы списка авторов
+     */
+    public function saveAuthorListData($data) {
+        foreach ($data as $language_id => $values) {
+            $this->db->query("REPLACE INTO " . DB_PREFIX . "author_list_description SET 
+                language_id = '" . (int)$language_id . "',
+                name = '" . $this->db->escape($values['name']) . "',
+                h1 = '" . $this->db->escape($values['h1']) . "',
+                meta_title = '" . $this->db->escape($values['meta_title']) . "',
+                meta_description = '" . $this->db->escape($values['meta_description']) . "',
+                description = '" . $this->db->escape($values['description']) . "'");
+        }
+    }
+
+    /**
+     * Получает SEO данные главной страницы блога
+     */
+    public function getBlogHomeData($language_id) {
+        $query = $this->db->query("SELECT * FROM " . DB_PREFIX . "blog_home_description WHERE language_id = '" . (int)$language_id . "'");
+        
+        if ($query->num_rows) {
+            return $query->row;
+        }
+        
+        return [
+            'name' => 'Блог',
+            'h1' => 'Блог',
+            'meta_title' => 'Блог',
+            'meta_description' => '',
+            'description' => ''
+        ];
+    }
+
+    /**
+     * Получает SEO данные страницы списка авторов
+     */
+    public function getAuthorListData($language_id) {
+        $query = $this->db->query("SELECT * FROM " . DB_PREFIX . "author_list_description WHERE language_id = '" . (int)$language_id . "'");
+        
+        if ($query->num_rows) {
+            return $query->row;
+        }
+        
+        return [
+            'name' => 'Авторы',
+            'h1' => 'Наши авторы',
+            'meta_title' => 'Авторы',
+            'meta_description' => '',
+            'description' => ''
+        ];
     }
 }
 ?>

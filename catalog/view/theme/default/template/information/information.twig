@@ -33,6 +33,13 @@
       {{ content_top }}
       <h1>{{ heading_title }}</h1>
       
+      {# ДОБАВЛЕНО: Изображение статьи #}
+      {% if image %}
+      <div class="article-image">
+        <img src="{{ image }}" alt="{{ heading_title }}" class="img-responsive">
+      </div>
+      {% endif %}
+      
       {# Мета-информация для статей блога #}
       {% if date_added or viewed or reading_time %}
       <div class="blog-meta">

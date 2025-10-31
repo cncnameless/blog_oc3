@@ -561,6 +561,28 @@ class ControllerCatalogInformation extends Controller {
         );
         // === КОНЕЦ БЛОКА МИКРОРАЗМЕТКИ ===
 
+        // === ДОБАВЛЯЕМ БЛОК ИЗОБРАЖЕНИЯ ДЛЯ СТАТЬИ ===
+        $this->load->model('tool/image');
+
+        if (isset($this->request->post['image'])) {
+            $data['image'] = $this->request->post['image'];
+        } elseif (!empty($information_info)) {
+            $data['image'] = $information_info['image'];
+        } else {
+            $data['image'] = '';
+        }
+
+        $data['placeholder'] = $this->model_tool_image->resize('no_image.png', 100, 100);
+
+        if (isset($this->request->post['image']) && is_file(DIR_IMAGE . $this->request->post['image'])) {
+            $data['thumb'] = $this->model_tool_image->resize($this->request->post['image'], 100, 100);
+        } elseif (!empty($information_info) && is_file(DIR_IMAGE . $information_info['image'])) {
+            $data['thumb'] = $this->model_tool_image->resize($information_info['image'], 100, 100);
+        } else {
+            $data['thumb'] = $data['placeholder'];
+        }
+        // === КОНЕЦ БЛОКА ИЗОБРАЖЕНИЯ ===
+
         if (isset($this->request->post['bottom'])) {
             $data['bottom'] = $this->request->post['bottom'];
         } elseif (!empty($information_info)) {

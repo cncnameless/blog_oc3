@@ -34,6 +34,7 @@ $_['entry_no_index']         = 'Не индексировать';
 $_['tab_blog']              = 'Блог';
 $_['entry_blog_category']   = 'Категория блога';
 $_['help_blog_category']    = '(Автозаполнение)';
+$_['entry_image']           = 'Изображение';
 
 // Новые поля для микроразметки
 $_['entry_schema_type']      = 'Тип разметки Schema.org';

@@ -1,6 +1,7 @@
 <?php
 class ModelCatalogInformation extends Model {
     public function addInformation($data) {
+        // ДОБАВЛЕНО: поле image в INSERT
         $this->db->query("INSERT INTO " . DB_PREFIX . "information SET 
             sort_order = '" . (int)$data['sort_order'] . "', 
             bottom = '" . (isset($data['bottom']) ? (int)$data['bottom'] : 0) . "', 
@@ -8,7 +9,8 @@ class ModelCatalogInformation extends Model {
             no_index = '" . (int)$data['no_index'] . "',
             date_added = '" . $this->db->escape($data['date_added']) . "',
             schema_type = '" . $this->db->escape($data['schema_type']) . "',
-            rating_value = " . (isset($data['rating_value']) && $data['rating_value'] !== '' ? "'" . (float)$data['rating_value'] . "'" : "NULL"));
+            rating_value = " . (isset($data['rating_value']) && $data['rating_value'] !== '' ? "'" . (float)$data['rating_value'] . "'" : "NULL") . ",
+            image = '" . $this->db->escape($data['image']) . "'");
 
         $information_id = $this->db->getLastId();
 
@@ -86,6 +88,7 @@ class ModelCatalogInformation extends Model {
     }
 
     public function editInformation($information_id, $data) {
+        // ДОБАВЛЕНО: поле image в UPDATE
         $this->db->query("UPDATE " . DB_PREFIX . "information SET 
             sort_order = '" . (int)$data['sort_order'] . "', 
             bottom = '" . (isset($data['bottom']) ? (int)$data['bottom'] : 0) . "', 
@@ -94,6 +97,7 @@ class ModelCatalogInformation extends Model {
             date_added = '" . $this->db->escape($data['date_added']) . "',
             schema_type = '" . $this->db->escape($data['schema_type']) . "',
             rating_value = " . (isset($data['rating_value']) && $data['rating_value'] !== '' ? "'" . (float)$data['rating_value'] . "'" : "NULL") . ",
+            image = '" . $this->db->escape($data['image']) . "',
             date_modified = NOW() 
             WHERE information_id = '" . (int)$information_id . "'");
 
