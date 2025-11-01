@@ -52,8 +52,7 @@ class ModelCatalogInformation extends Model {
                 $this->db->query("INSERT INTO " . DB_PREFIX . "information_to_author SET 
                     information_id = '" . (int)$information_id . "', 
                     author_id = '" . (int)$author['author_id'] . "', 
-                    sort_order = '" . (int)$author['sort_order'] . "',
-                    is_primary = '" . (int)$author['is_primary'] . "'");
+                    sort_order = '" . (int)$author['sort_order'] . "'");
             }
         }
         // === КОНЕЦ БЛОКА АВТОРОВ ===
@@ -163,8 +162,7 @@ class ModelCatalogInformation extends Model {
                 $this->db->query("INSERT INTO " . DB_PREFIX . "information_to_author SET 
                     information_id = '" . (int)$information_id . "', 
                     author_id = '" . (int)$author['author_id'] . "', 
-                    sort_order = '" . (int)$author['sort_order'] . "',
-                    is_primary = '" . (int)$author['is_primary'] . "'");
+                    sort_order = '" . (int)$author['sort_order'] . "'");
             }
         }
         // === КОНЕЦ БЛОКА ===
@@ -233,7 +231,7 @@ class ModelCatalogInformation extends Model {
         $this->cache->delete('information');
     }
 
-    // === ДОБАВЛЯЕМ НОВЫЕ МЕТОДЫ ДЛЯ РАБОТЫ С ТЕГАМИ ===
+    // === ДОБАВЛЯЕМ НОВЫЕ МЕТОДЫ ДЛЯ РАБОТЫ С ТЕГОВ ===
 
     /**
      * Сохраняет теги для статьи
@@ -505,39 +503,40 @@ class ModelCatalogInformation extends Model {
             return array();
         }
 
-        $query = $this->db->query("SELECT * FROM " . DB_PREFIX . "information_to_author WHERE information_id = '" . (int)$information_id . "' ORDER BY is_primary DESC, sort_order ASC");
+        // ИСПРАВЛЕНИЕ: Убрано поле is_primary из ORDER BY, так как оно было удалено из базы данных
+        $query = $this->db->query("SELECT * FROM " . DB_PREFIX . "information_to_author WHERE information_id = '" . (int)$information_id . "' ORDER BY sort_order ASC");
         return $query->rows;
     }
 
     // Добавляем эти методы в конец класса ModelCatalogInformation
 
-public function getBlogArticles($data = array()) {
-    $sql = "SELECT * FROM " . DB_PREFIX . "information i 
-            LEFT JOIN " . DB_PREFIX . "information_description id ON (i.information_id = id.information_id) 
-            WHERE id.language_id = '" . (int)$this->config->get('config_language_id') . "' 
-            AND i.status = '1'";
+    public function getBlogArticles($data = array()) {
+        $sql = "SELECT * FROM " . DB_PREFIX . "information i 
+                LEFT JOIN " . DB_PREFIX . "information_description id ON (i.information_id = id.information_id) 
+                WHERE id.language_id = '" . (int)$this->config->get('config_language_id') . "' 
+                AND i.status = '1'";
 
-    $sql .= " ORDER BY i.date_added DESC";
+        $sql .= " ORDER BY i.date_added DESC";
 
-    if (isset($data['start']) || isset($data['limit'])) {
-        if ($data['start'] < 0) {
-            $data['start'] = 0;
+        if (isset($data['start']) || isset($data['limit'])) {
+            if ($data['start'] < 0) {
+                $data['start'] = 0;
+            }
+
+            if ($data['limit'] < 1) {
+                $data['limit'] = 20;
+            }
+
+            $sql .= " LIMIT " . (int)$data['start'] . "," . (int)$data['limit'];
         }
 
-        if ($data['limit'] < 1) {
-            $data['limit'] = 20;
-        }
-
-        $sql .= " LIMIT " . (int)$data['start'] . "," . (int)$data['limit'];
+        $query = $this->db->query($sql);
+        return $query->rows;
     }
 
-    $query = $this->db->query($sql);
-    return $query->rows;
-}
-
-public function getTotalBlogArticles() {
-    $query = $this->db->query("SELECT COUNT(*) AS total FROM " . DB_PREFIX . "information WHERE status = '1'");
-    return $query->row['total'];
-}
+    public function getTotalBlogArticles() {
+        $query = $this->db->query("SELECT COUNT(*) AS total FROM " . DB_PREFIX . "information WHERE status = '1'");
+        return $query->row['total'];
+    }
 }
 ?>

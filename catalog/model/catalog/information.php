@@ -285,7 +285,8 @@ class ModelCatalogInformation extends Model {
             return array();
         }
 
-        $query = $this->db->query("SELECT * FROM " . DB_PREFIX . "information_to_author WHERE information_id = '" . (int)$information_id . "' ORDER BY is_primary DESC, sort_order ASC");
+        // ИСПРАВЛЕНИЕ: Убрано поле is_primary из ORDER BY, так как оно было удалено из базы данных
+        $query = $this->db->query("SELECT * FROM " . DB_PREFIX . "information_to_author WHERE information_id = '" . (int)$information_id . "' ORDER BY sort_order ASC");
         return $query->rows;
     }
 }

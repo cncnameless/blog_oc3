@@ -243,14 +243,14 @@ class ModelCatalogAuthor extends Model {
             return array();
         }
 
-        $query = $this->db->query("SELECT a.*, ad.name, ad.job_title, ad.bio, i2a.is_primary, i2a.sort_order 
+        $query = $this->db->query("SELECT a.*, ad.name, ad.job_title, ad.bio, i2a.sort_order 
                                   FROM " . DB_PREFIX . "information_to_author i2a 
                                   LEFT JOIN " . DB_PREFIX . "article_author a ON (i2a.author_id = a.author_id) 
                                   LEFT JOIN " . DB_PREFIX . "article_author_description ad ON (a.author_id = ad.author_id) 
                                   WHERE i2a.information_id = '" . (int)$information_id . "'
                                   AND a.status = '1'
                                   AND ad.language_id = '" . (int)$this->config->get('config_language_id') . "'
-                                  ORDER BY i2a.is_primary DESC, i2a.sort_order ASC");
+                                  ORDER BY i2a.sort_order ASC");
 
         return $query->rows;
     }

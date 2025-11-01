@@ -509,7 +509,7 @@ class ControllerCatalogInformation extends Controller {
             $data['information_author'] = array();
         }
 
-        // Формируем массив выбранных авторов
+        // Формируем массив выбранных авторов (УПРОЩЕНО: удалена логика is_primary)
         $data['selected_authors'] = array();
         foreach ($data['information_author'] as $author_data) {
             foreach ($data['authors'] as $author) {
@@ -517,8 +517,7 @@ class ControllerCatalogInformation extends Controller {
                     $data['selected_authors'][] = array(
                         'author_id' => $author['author_id'],
                         'name' => $author['name'],
-                        'sort_order' => $author_data['sort_order'],
-                        'is_primary' => $author_data['is_primary']
+                        'sort_order' => $author_data['sort_order']
                     );
                     break;
                 }

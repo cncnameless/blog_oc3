@@ -110,8 +110,7 @@ class ControllerInformationInformation extends Controller {
                         'job_title' => $author['job_title'],
                         'bio' => utf8_substr(strip_tags(html_entity_decode($author['bio'], ENT_QUOTES, 'UTF-8')), 0, 200) . '..',
                         'image' => $image,
-                        'href' => $this->url->link('information/author', 'author_id=' . $author['author_id'], true),
-                        'is_primary' => $author['is_primary']
+                        'href' => $this->url->link('information/author', 'author_id=' . $author['author_id'], true)
                     );
                 }
 

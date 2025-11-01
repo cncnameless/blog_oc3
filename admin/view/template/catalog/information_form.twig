@@ -258,24 +258,11 @@
                     <div id="information-author{{ selected_author.author_id }}">
                       <i class="fa fa-minus-circle"></i> 
                       {{ selected_author.name }}
-                      {% if selected_author.is_primary %}<strong>(Основной)</strong>{% endif %}
                       <input type="hidden" name="information_author[{{ selected_author.author_id }}][author_id]" value="{{ selected_author.author_id }}" />
                       <input type="hidden" name="information_author[{{ selected_author.author_id }}][sort_order]" value="{{ selected_author.sort_order }}" />
-                      <input type="hidden" name="information_author[{{ selected_author.author_id }}][is_primary]" value="{{ selected_author.is_primary }}" />
                     </div>
                     {% endfor %}
                   </div>
-                </div>
-              </div>
-              <div class="form-group">
-                <label class="col-sm-2 control-label">Настройки авторов</label>
-                <div class="col-sm-10">
-                  <div class="checkbox">
-                    <label>
-                      <input type="checkbox" id="set-primary-author" /> Установить выбранного как основного автора
-                    </label>
-                  </div>
-                  <small class="text-muted">Основной автор будет выделен в статье</small>
                 </div>
               </div>
             </div>
@@ -401,28 +388,13 @@ $('input[name=\'author\']').autocomplete({
         $('input[name=\'author\']').val('');
         
         if ($('#information-author' + item['value']).length == 0) {
-            var is_primary = $('#set-primary-author').is(':checked') ? 1 : 0;
-            
-            // Сбрасываем основной автор, если ставим нового
-            if (is_primary) {
-                $('#information-author input[name$="[is_primary]"]').val(0);
-                $('#information-author strong').remove();
-            }
-            
             var html = '<div id="information-author' + item['value'] + '">';
             html += '<i class="fa fa-minus-circle"></i> ' + item['label'];
-            if (is_primary) {
-                html += ' <strong>(Основной)</strong>';
-            }
             html += '<input type="hidden" name="information_author[' + item['value'] + '][author_id]" value="' + item['value'] + '" />';
             html += '<input type="hidden" name="information_author[' + item['value'] + '][sort_order]" value="0" />';
-            html += '<input type="hidden" name="information_author[' + item['value'] + '][is_primary]" value="' + is_primary + '" />';
             html += '</div>';
             
             $('#information-author').append(html);
-            
-            // Сбрасываем чекбокс
-            $('#set-primary-author').prop('checked', false);
         }
     }
 });

@@ -119,10 +119,8 @@ CREATE TABLE IF NOT EXISTS `information_to_author` (
   `information_id` int(11) NOT NULL,
   `author_id` int(11) NOT NULL,
   `sort_order` int(3) NOT NULL DEFAULT '0',
-  `is_primary` tinyint(1) DEFAULT '0',
   PRIMARY KEY (`information_id`,`author_id`),
-  KEY `author_id` (`author_id`),
-  KEY `is_primary` (`is_primary`)
+  KEY `author_id` (`author_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
 -- === Таблица для SEO данных главной страницы блога ===

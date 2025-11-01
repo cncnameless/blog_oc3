@@ -106,21 +106,16 @@ class ModelCatalogAuthor extends Model {
             return array();
         }
 
-        $query = $this->db->query("SELECT a.*, ad.name, ad.job_title, ad.bio, i2a.is_primary, i2a.sort_order 
+        $query = $this->db->query("SELECT a.*, ad.name, ad.job_title, ad.bio, i2a.sort_order 
                                   FROM " . DB_PREFIX . "information_to_author i2a 
                                   LEFT JOIN " . DB_PREFIX . "article_author a ON (i2a.author_id = a.author_id) 
                                   LEFT JOIN " . DB_PREFIX . "article_author_description ad ON (a.author_id = ad.author_id) 
                                   WHERE i2a.information_id = '" . (int)$information_id . "'
                                   AND a.status = '1'
                                   AND ad.language_id = '" . (int)$this->config->get('config_language_id') . "'
-                                  ORDER BY i2a.is_primary DESC, i2a.sort_order ASC");
+                                  ORDER BY i2a.sort_order ASC");
 
         return $query->rows;
-    }
-
-    // ДОБАВЛЕННЫЙ МЕТОД ДЛЯ СОВМЕСТИМОСТИ С КОНТРОЛЛЕРОМ BLOG_CATEGORY
-    public function getAuthorsByInformationId($information_id) {
-        return $this->getAuthorsByInformation($information_id);
     }
 
     public function getAllAuthors($data = array()) {
@@ -183,9 +178,61 @@ class ModelCatalogAuthor extends Model {
         return $query->row['total'];
     }
 
-    // Новый метод для получения авторов с полными данными для микроразметки
-    public function getAllAuthorsWithMicrodata($data = array()) {
-        return $this->getAllAuthors($data);
+    public function getAuthorDescriptions($author_id) {
+        $author_description_data = array();
+
+        // Проверяем существование таблицы
+        $table_exists = $this->db->query("SHOW TABLES LIKE '" . DB_PREFIX . "article_author_description'");
+        if (!$table_exists->num_rows) {
+            return $author_description_data;
+        }
+
+        $query = $this->db->query("SELECT * FROM " . DB_PREFIX . "article_author_description WHERE author_id = '" . (int)$author_id . "'");
+
+        foreach ($query->rows as $result) {
+            $author_description_data[$result['language_id']] = array(
+                'name'             => $result['name'],
+                'description'      => $result['description'],
+                'meta_title'       => $result['meta_title'],
+                'meta_description' => $result['meta_description'],
+                'meta_keyword'     => $result['meta_keyword'],
+                'job_title'        => $result['job_title'],
+                'bio'              => $result['bio'],
+                'social_links'     => $result['social_links'] ? json_decode($result['social_links'], true) : array()
+            );
+        }
+
+        return $author_description_data;
+    }
+
+    public function getAuthorStores($author_id) {
+        $author_store_data = array();
+
+        // Проверяем существование таблицы
+        $table_exists = $this->db->query("SHOW TABLES LIKE '" . DB_PREFIX . "article_author_to_store'");
+        if (!$table_exists->num_rows) {
+            return $author_store_data;
+        }
+
+        $query = $this->db->query("SELECT * FROM " . DB_PREFIX . "article_author_to_store WHERE author_id = '" . (int)$author_id . "'");
+
+        foreach ($query->rows as $result) {
+            $author_store_data[] = $result['store_id'];
+        }
+
+        return $author_store_data;
+    }
+
+    public function getAuthorSeoUrls($author_id) {
+        $author_seo_url_data = array();
+        
+        $query = $this->db->query("SELECT * FROM " . DB_PREFIX . "seo_url WHERE query = 'author_id=" . (int)$author_id . "'");
+
+        foreach ($query->rows as $result) {
+            $author_seo_url_data[$result['store_id']][$result['language_id']] = $result['keyword'];
+        }
+
+        return $author_seo_url_data;
     }
 }
 ?>
