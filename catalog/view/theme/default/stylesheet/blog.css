@@ -515,3 +515,47 @@
         font-size: 11px;
     }
 }
+
+.authors-list .author-thumb {
+  margin-bottom: 30px;
+  padding: 15px;
+  border: 1px solid #eee;
+  border-radius: 5px;
+  transition: all 0.3s;
+}
+.authors-list .author-thumb:hover {
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+.authors-list .author-thumb .image {
+  margin-bottom: 15px;
+}
+.authors-list .author-thumb .image img {
+  border-radius: 50%;
+  margin: 0 auto;
+}
+.authors-list .author-thumb .job-title {
+  font-style: italic;
+  color: #666;
+  margin-bottom: 10px;
+}
+.authors-list .author-thumb .bio {
+  height: 60px;
+  overflow: hidden;
+  margin-bottom: 15px;
+}
+.authors-list .author-thumb .articles-count {
+  font-weight: bold;
+  margin-bottom: 15px;
+}
+.author-social-links .btn-group .btn {
+  padding: 5px 8px;
+}
+
+.author-social-links .list-group-item {
+    padding: 8px 15px;
+    border: 1px solid #ddd;
+    margin-bottom: 5px;
+  }
+  .author-social-links .list-group-item:hover {
+    background-color: #f5f5f5;
+  }

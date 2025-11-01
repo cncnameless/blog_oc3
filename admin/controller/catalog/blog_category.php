@@ -234,7 +234,6 @@ class ControllerCatalogBlogCategory extends Controller {
         $data['entry_description'] = $this->language->get('entry_description');
         $data['entry_meta_title'] = $this->language->get('entry_meta_title');
         $data['entry_meta_description'] = $this->language->get('entry_meta_description');
-        $data['entry_meta_keyword'] = $this->language->get('entry_meta_keyword');
         $data['entry_parent'] = $this->language->get('entry_parent');
         $data['entry_image'] = $this->language->get('entry_image');
         $data['entry_sort_order'] = $this->language->get('entry_sort_order');

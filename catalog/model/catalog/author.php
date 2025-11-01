@@ -130,7 +130,8 @@ class ModelCatalogAuthor extends Model {
         
         if ($info_to_author_exists->num_rows) {
             $sql = "SELECT a.*, ad.name, ad.job_title, ad.bio, ad.description,
-                           a.company_employee, a.affiliation, a.knows_about, a.knows_language, a.same_as,
+                           a.company_employee, a.affiliation, a.knows_about, a.knows_language,
+                           a.website, a.email, a.github, a.telegram, a.vk, a.facebook, a.twitter, a.instagram, a.linkedin, a.youtube,
                            (SELECT COUNT(*) FROM " . DB_PREFIX . "information_to_author i2a 
                             LEFT JOIN " . DB_PREFIX . "information i ON (i2a.information_id = i.information_id)
                             WHERE i2a.author_id = a.author_id AND i.status = '1') as article_count
@@ -141,7 +142,8 @@ class ModelCatalogAuthor extends Model {
         } else {
             // Если таблицы information_to_author нет, используем упрощенный запрос без подсчета статей
             $sql = "SELECT a.*, ad.name, ad.job_title, ad.bio, ad.description, 
-                           a.company_employee, a.affiliation, a.knows_about, a.knows_language, a.same_as,
+                           a.company_employee, a.affiliation, a.knows_about, a.knows_language,
+                           a.website, a.email, a.github, a.telegram, a.vk, a.facebook, a.twitter, a.instagram, a.linkedin, a.youtube,
                            0 as article_count
                     FROM " . DB_PREFIX . "article_author a 
                     LEFT JOIN " . DB_PREFIX . "article_author_description ad ON (a.author_id = ad.author_id) 
@@ -195,10 +197,8 @@ class ModelCatalogAuthor extends Model {
                 'description'      => $result['description'],
                 'meta_title'       => $result['meta_title'],
                 'meta_description' => $result['meta_description'],
-                'meta_keyword'     => $result['meta_keyword'],
                 'job_title'        => $result['job_title'],
-                'bio'              => $result['bio'],
-                'social_links'     => $result['social_links'] ? json_decode($result['social_links'], true) : array()
+                'bio'              => $result['bio']
             );
         }
 

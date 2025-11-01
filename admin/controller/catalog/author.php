@@ -364,6 +364,87 @@ class ControllerCatalogAuthor extends Controller {
             $data['image'] = '';
         }
 
+        // Новые поля для социальных сетей
+        if (isset($this->request->post['website'])) {
+            $data['website'] = $this->request->post['website'];
+        } elseif (!empty($author_info)) {
+            $data['website'] = $author_info['website'];
+        } else {
+            $data['website'] = '';
+        }
+
+        if (isset($this->request->post['email'])) {
+            $data['email'] = $this->request->post['email'];
+        } elseif (!empty($author_info)) {
+            $data['email'] = $author_info['email'];
+        } else {
+            $data['email'] = '';
+        }
+
+        if (isset($this->request->post['github'])) {
+            $data['github'] = $this->request->post['github'];
+        } elseif (!empty($author_info)) {
+            $data['github'] = $author_info['github'];
+        } else {
+            $data['github'] = '';
+        }
+
+        if (isset($this->request->post['telegram'])) {
+            $data['telegram'] = $this->request->post['telegram'];
+        } elseif (!empty($author_info)) {
+            $data['telegram'] = $author_info['telegram'];
+        } else {
+            $data['telegram'] = '';
+        }
+
+        if (isset($this->request->post['vk'])) {
+            $data['vk'] = $this->request->post['vk'];
+        } elseif (!empty($author_info)) {
+            $data['vk'] = $author_info['vk'];
+        } else {
+            $data['vk'] = '';
+        }
+
+        if (isset($this->request->post['facebook'])) {
+            $data['facebook'] = $this->request->post['facebook'];
+        } elseif (!empty($author_info)) {
+            $data['facebook'] = $author_info['facebook'];
+        } else {
+            $data['facebook'] = '';
+        }
+
+        if (isset($this->request->post['twitter'])) {
+            $data['twitter'] = $this->request->post['twitter'];
+        } elseif (!empty($author_info)) {
+            $data['twitter'] = $author_info['twitter'];
+        } else {
+            $data['twitter'] = '';
+        }
+
+        if (isset($this->request->post['instagram'])) {
+            $data['instagram'] = $this->request->post['instagram'];
+        } elseif (!empty($author_info)) {
+            $data['instagram'] = $author_info['instagram'];
+        } else {
+            $data['instagram'] = '';
+        }
+
+        if (isset($this->request->post['linkedin'])) {
+            $data['linkedin'] = $this->request->post['linkedin'];
+        } elseif (!empty($author_info)) {
+            $data['linkedin'] = $author_info['linkedin'];
+        } else {
+            $data['linkedin'] = '';
+        }
+
+        if (isset($this->request->post['youtube'])) {
+            $data['youtube'] = $this->request->post['youtube'];
+        } elseif (!empty($author_info)) {
+            $data['youtube'] = $author_info['youtube'];
+        } else {
+            $data['youtube'] = '';
+        }
+
         // Новые поля для микроразметки
         if (isset($this->request->post['company_employee'])) {
             $data['company_employee'] = $this->request->post['company_employee'];
@@ -395,14 +476,6 @@ class ControllerCatalogAuthor extends Controller {
             $data['knows_language'] = $author_info['knows_language'];
         } else {
             $data['knows_language'] = '';
-        }
-
-        if (isset($this->request->post['same_as'])) {
-            $data['same_as'] = $this->request->post['same_as'];
-        } elseif (!empty($author_info)) {
-            $data['same_as'] = $author_info['same_as'];
-        } else {
-            $data['same_as'] = '';
         }
 
         $this->load->model('tool/image');

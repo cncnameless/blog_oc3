@@ -34,6 +34,65 @@
         <div class="row">
           <div class="col-sm-3">
             <img src="{{ image }}" alt="{{ heading_title }}" title="{{ heading_title }}" class="img-responsive" />
+            
+            {# Блок социальных сетей #}
+            {% if website or email or github or telegram or vk or facebook or twitter or instagram or linkedin or youtube %}
+            <div class="author-social-links" style="margin-top: 20px;">
+              <h4>Контакты</h4>
+              <div class="list-group">
+                {% if website %}
+                <a href="{{ website }}" target="_blank" class="list-group-item">
+                  <i class="fa fa-globe"></i> Веб-сайт
+                </a>
+                {% endif %}
+                {% if email %}
+                <a href="mailto:{{ email }}" class="list-group-item">
+                  <i class="fa fa-envelope"></i> Email
+                </a>
+                {% endif %}
+                {% if github %}
+                <a href="{{ github }}" target="_blank" class="list-group-item">
+                  <i class="fa fa-github"></i> GitHub
+                </a>
+                {% endif %}
+                {% if telegram %}
+                <a href="{{ telegram }}" target="_blank" class="list-group-item">
+                  <i class="fa fa-telegram"></i> Telegram
+                </a>
+                {% endif %}
+                {% if vk %}
+                <a href="{{ vk }}" target="_blank" class="list-group-item">
+                  <i class="fa fa-vk"></i> ВКонтакте
+                </a>
+                {% endif %}
+                {% if facebook %}
+                <a href="{{ facebook }}" target="_blank" class="list-group-item">
+                  <i class="fa fa-facebook"></i> Facebook
+                </a>
+                {% endif %}
+                {% if twitter %}
+                <a href="{{ twitter }}" target="_blank" class="list-group-item">
+                  <i class="fa fa-twitter"></i> Twitter
+                </a>
+                {% endif %}
+                {% if instagram %}
+                <a href="{{ instagram }}" target="_blank" class="list-group-item">
+                  <i class="fa fa-instagram"></i> Instagram
+                </a>
+                {% endif %}
+                {% if linkedin %}
+                <a href="{{ linkedin }}" target="_blank" class="list-group-item">
+                  <i class="fa fa-linkedin"></i> LinkedIn
+                </a>
+                {% endif %}
+                {% if youtube %}
+                <a href="{{ youtube }}" target="_blank" class="list-group-item">
+                  <i class="fa fa-youtube"></i> YouTube
+                </a>
+                {% endif %}
+              </div>
+            </div>
+            {% endif %}
           </div>
           <div class="col-sm-9">
             <h1>{{ heading_title }}</h1>

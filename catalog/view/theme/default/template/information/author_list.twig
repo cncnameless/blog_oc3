@@ -1,6 +1,6 @@
 {{ header }}
 
-{# Разделенная микроразметка Schema.org для страницы списка авторов #}
+{# Разделенная микроразметка Schema.org для списка авторов #}
 {% if microdata %}
     {% for key, schema_block in microdata %}
     <script type="application/ld+json">
@@ -32,18 +32,19 @@
     <div id="content" class="{{ class }}">{{ content_top }}
       <h1>{{ heading_title }}</h1>
       {% if description %}
-      <div class="author-list-description">{{ description }}</div>
+      <div class="row">
+        <div class="col-sm-12">{{ description }}</div>
+      </div>
       <hr>
       {% endif %}
-      
       {% if authors %}
       <div class="row authors-list">
         {% for author in authors %}
-        <div class="col-lg-4 col-md-4 col-sm-6">
+        <div class="col-lg-4 col-md-4 col-sm-6 col-xs-12">
           <div class="author-thumb text-center">
             <div class="image">
               <a href="{{ author.href }}">
-                <img src="{{ author.image }}" alt="{{ author.name }}" title="{{ author.name }}" class="img-responsive img-circle" />
+                <img src="{{ author.image }}" alt="{{ author.name }}" title="{{ author.name }}" class="img-responsive" />
               </a>
             </div>
             <div class="caption">
@@ -51,10 +52,47 @@
               {% if author.job_title %}
               <p class="job-title">{{ author.job_title }}</p>
               {% endif %}
-              {% if author.bio %}
               <p class="bio">{{ author.bio }}</p>
+              
+              {# Социальные сети автора в списке #}
+              {% if author.website or author.email or author.github or author.telegram or author.vk or author.facebook or author.twitter or author.instagram or author.linkedin or author.youtube %}
+              <div class="author-social-links">
+                <div class="btn-group" role="group">
+                  {% if author.website %}
+                  <a href="{{ author.website }}" target="_blank" class="btn btn-default btn-sm" title="Веб-сайт"><i class="fa fa-globe"></i></a>
+                  {% endif %}
+                  {% if author.email %}
+                  <a href="mailto:{{ author.email }}" class="btn btn-default btn-sm" title="Email"><i class="fa fa-envelope"></i></a>
+                  {% endif %}
+                  {% if author.github %}
+                  <a href="{{ author.github }}" target="_blank" class="btn btn-default btn-sm" title="GitHub"><i class="fa fa-github"></i></a>
+                  {% endif %}
+                  {% if author.telegram %}
+                  <a href="{{ author.telegram }}" target="_blank" class="btn btn-default btn-sm" title="Telegram"><i class="fa fa-telegram"></i></a>
+                  {% endif %}
+                  {% if author.vk %}
+                  <a href="{{ author.vk }}" target="_blank" class="btn btn-default btn-sm" title="ВКонтакте"><i class="fa fa-vk"></i></a>
+                  {% endif %}
+                  {% if author.facebook %}
+                  <a href="{{ author.facebook }}" target="_blank" class="btn btn-default btn-sm" title="Facebook"><i class="fa fa-facebook"></i></a>
+                  {% endif %}
+                  {% if author.twitter %}
+                  <a href="{{ author.twitter }}" target="_blank" class="btn btn-default btn-sm" title="Twitter"><i class="fa fa-twitter"></i></a>
+                  {% endif %}
+                  {% if author.instagram %}
+                  <a href="{{ author.instagram }}" target="_blank" class="btn btn-default btn-sm" title="Instagram"><i class="fa fa-instagram"></i></a>
+                  {% endif %}
+                  {% if author.linkedin %}
+                  <a href="{{ author.linkedin }}" target="_blank" class="btn btn-default btn-sm" title="LinkedIn"><i class="fa fa-linkedin"></i></a>
+                  {% endif %}
+                  {% if author.youtube %}
+                  <a href="{{ author.youtube }}" target="_blank" class="btn btn-default btn-sm" title="YouTube"><i class="fa fa-youtube"></i></a>
+                  {% endif %}
+                </div>
+              </div>
               {% endif %}
-              <p class="article-count">{{ text_articles_count|format(author.total_articles) }}</p>
+              
+              <p class="articles-count">{{ text_articles_count|format(author.total_articles) }}</p>
               <a href="{{ author.href }}" class="btn btn-primary">{{ button_view_author }}</a>
             </div>
           </div>

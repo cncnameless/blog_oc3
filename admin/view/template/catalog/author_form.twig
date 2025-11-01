@@ -27,6 +27,7 @@
           <ul class="nav nav-tabs">
             <li class="active"><a href="#tab-general" data-toggle="tab">{{ tab_general }}</a></li>
             <li><a href="#tab-data" data-toggle="tab">{{ tab_data }}</a></li>
+            <li><a href="#tab-social" data-toggle="tab">Социальные сети</a></li>
             <li><a href="#tab-microdata" data-toggle="tab">Микроразметка</a></li>
             <li><a href="#tab-seo" data-toggle="tab">{{ tab_seo }}</a></li>
           </ul>
@@ -81,12 +82,6 @@
                       <textarea name="author_description[{{ language.language_id }}][meta_description]" rows="5" placeholder="{{ entry_meta_description }}" id="input-meta-description{{ language.language_id }}" class="form-control">{{ author_description[language.language_id] ? author_description[language.language_id].meta_description }}</textarea>
                     </div>
                   </div>
-                  <div class="form-group">
-                    <label class="col-sm-2 control-label" for="input-meta-keyword{{ language.language_id }}">{{ entry_meta_keyword }}</label>
-                    <div class="col-sm-10">
-                      <textarea name="author_description[{{ language.language_id }}][meta_keyword]" rows="5" placeholder="{{ entry_meta_keyword }}" id="input-meta-keyword{{ language.language_id }}" class="form-control">{{ author_description[language.language_id] ? author_description[language.language_id].meta_keyword }}</textarea>
-                    </div>
-                  </div>
                 </div>
                 {% endfor %}</div>
             </div>
@@ -138,6 +133,91 @@
                 </div>
               </div>
             </div>
+            <div class="tab-pane" id="tab-social">
+              <div class="alert alert-info">
+                <i class="fa fa-info-circle"></i> Ссылки на социальные сети и контакты автора
+              </div>
+              
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-website">Веб-сайт</label>
+                <div class="col-sm-10">
+                  <input type="text" name="website" value="{{ website }}" placeholder="https://example.com" id="input-website" class="form-control" />
+                  <small class="text-muted">Ссылка на персональный сайт или блог автора</small>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-email">Email</label>
+                <div class="col-sm-10">
+                  <input type="email" name="email" value="{{ email }}" placeholder="author@example.com" id="input-email" class="form-control" />
+                  <small class="text-muted">Электронная почта для связи</small>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-github">GitHub</label>
+                <div class="col-sm-10">
+                  <input type="text" name="github" value="{{ github }}" placeholder="https://github.com/username" id="input-github" class="form-control" />
+                  <small class="text-muted">Ссылка на профиль GitHub</small>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-telegram">Telegram</label>
+                <div class="col-sm-10">
+                  <input type="text" name="telegram" value="{{ telegram }}" placeholder="https://t.me/username или @username" id="input-telegram" class="form-control" />
+                  <small class="text-muted">Ссылка на Telegram</small>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-vk">VKontakte</label>
+                <div class="col-sm-10">
+                  <input type="text" name="vk" value="{{ vk }}" placeholder="https://vk.com/username" id="input-vk" class="form-control" />
+                  <small class="text-muted">Ссылка на профиль ВКонтакте</small>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-facebook">Facebook</label>
+                <div class="col-sm-10">
+                  <input type="text" name="facebook" value="{{ facebook }}" placeholder="https://facebook.com/username" id="input-facebook" class="form-control" />
+                  <small class="text-muted">Ссылка на профиль Facebook</small>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-twitter">Twitter</label>
+                <div class="col-sm-10">
+                  <input type="text" name="twitter" value="{{ twitter }}" placeholder="https://twitter.com/username" id="input-twitter" class="form-control" />
+                  <small class="text-muted">Ссылка на профиль Twitter</small>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-instagram">Instagram</label>
+                <div class="col-sm-10">
+                  <input type="text" name="instagram" value="{{ instagram }}" placeholder="https://instagram.com/username" id="input-instagram" class="form-control" />
+                  <small class="text-muted">Ссылка на профиль Instagram</small>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-linkedin">LinkedIn</label>
+                <div class="col-sm-10">
+                  <input type="text" name="linkedin" value="{{ linkedin }}" placeholder="https://linkedin.com/in/username" id="input-linkedin" class="form-control" />
+                  <small class="text-muted">Ссылка на профиль LinkedIn</small>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-youtube">YouTube</label>
+                <div class="col-sm-10">
+                  <input type="text" name="youtube" value="{{ youtube }}" placeholder="https://youtube.com/c/username" id="input-youtube" class="form-control" />
+                  <small class="text-muted">Ссылка на YouTube канал</small>
+                </div>
+              </div>
+            </div>
             <div class="tab-pane" id="tab-microdata">
               <div class="alert alert-info">
                 <i class="fa fa-info-circle"></i> Настройки для микроразметки Schema.org (JSON-LD)
@@ -176,14 +256,6 @@
                 <div class="col-sm-10">
                   <input type="text" name="knows_language" value="{{ knows_language }}" placeholder="Russian, English, Spanish" id="input-knows-language" class="form-control" />
                   <small class="text-muted">Языки, которыми владеет автор. Например: Russian, English</small>
-                </div>
-              </div>
-
-              <div class="form-group">
-                <label class="col-sm-2 control-label" for="input-same-as">Ссылки на соцсети и сайты</label>
-                <div class="col-sm-10">
-                  <textarea name="same_as" rows="4" placeholder="https://facebook.com/profile&#10;https://twitter.com/profile&#10;https://linkedin.com/in/profile" id="input-same-as" class="form-control">{{ same_as }}</textarea>
-                  <small class="text-muted">Укажите ссылки на профили в социальных сетях и других сайтах (каждая ссылка с новой строки)</small>
                 </div>
               </div>
             </div>

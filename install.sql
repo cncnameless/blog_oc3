@@ -43,7 +43,6 @@ CREATE TABLE IF NOT EXISTS `blog_category_description` (
   `description` text,
   `meta_title` varchar(255) NOT NULL,
   `meta_description` varchar(1000) DEFAULT NULL,
-  `meta_keyword` varchar(500) DEFAULT NULL,
   `keyword` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`blog_category_id`,`language_id`),
   KEY `keyword` (`keyword`)
@@ -81,7 +80,19 @@ ALTER TABLE `article_author` ADD COLUMN IF NOT EXISTS `company_employee` TINYINT
 ALTER TABLE `article_author` ADD COLUMN IF NOT EXISTS `affiliation` VARCHAR(255) NOT NULL DEFAULT '';
 ALTER TABLE `article_author` ADD COLUMN IF NOT EXISTS `knows_about` TEXT NOT NULL;
 ALTER TABLE `article_author` ADD COLUMN IF NOT EXISTS `knows_language` TEXT NOT NULL;
-ALTER TABLE `article_author` ADD COLUMN IF NOT EXISTS `same_as` TEXT NOT NULL;
+
+-- === ДОБАВЛЯЕМ НОВЫЕ ПОЛЯ ДЛЯ СОЦИАЛЬНЫХ СЕТЕЙ И КОНТАКТОВ ===
+ALTER TABLE `article_author` 
+ADD COLUMN IF NOT EXISTS `website` VARCHAR(255) NOT NULL DEFAULT '',
+ADD COLUMN IF NOT EXISTS `email` VARCHAR(255) NOT NULL DEFAULT '',
+ADD COLUMN IF NOT EXISTS `github` VARCHAR(255) NOT NULL DEFAULT '',
+ADD COLUMN IF NOT EXISTS `telegram` VARCHAR(255) NOT NULL DEFAULT '',
+ADD COLUMN IF NOT EXISTS `vk` VARCHAR(255) NOT NULL DEFAULT '',
+ADD COLUMN IF NOT EXISTS `facebook` VARCHAR(255) NOT NULL DEFAULT '',
+ADD COLUMN IF NOT EXISTS `twitter` VARCHAR(255) NOT NULL DEFAULT '',
+ADD COLUMN IF NOT EXISTS `instagram` VARCHAR(255) NOT NULL DEFAULT '',
+ADD COLUMN IF NOT EXISTS `linkedin` VARCHAR(255) NOT NULL DEFAULT '',
+ADD COLUMN IF NOT EXISTS `youtube` VARCHAR(255) NOT NULL DEFAULT '';
 
 -- === Описания авторов ===
 CREATE TABLE IF NOT EXISTS `article_author_description` (
@@ -91,7 +102,6 @@ CREATE TABLE IF NOT EXISTS `article_author_description` (
   `description` text NOT NULL,
   `meta_title` varchar(255) NOT NULL,
   `meta_description` varchar(1000) NOT NULL,
-  `meta_keyword` varchar(500) NOT NULL,
   `job_title` varchar(100) DEFAULT NULL,
   `bio` text,
   `social_links` text COMMENT 'JSON с социальными сетями',
@@ -130,7 +140,6 @@ CREATE TABLE IF NOT EXISTS `blog_home_description` (
   `h1` varchar(255) NOT NULL,
   `meta_title` varchar(255) NOT NULL,
   `meta_description` varchar(1000) DEFAULT NULL,
-  `meta_keyword` varchar(500) DEFAULT NULL,
   `description` text,
   PRIMARY KEY (`language_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
@@ -142,7 +151,6 @@ CREATE TABLE IF NOT EXISTS `author_list_description` (
   `h1` varchar(255) NOT NULL,
   `meta_title` varchar(255) NOT NULL,
   `meta_description` varchar(1000) DEFAULT NULL,
-  `meta_keyword` varchar(500) DEFAULT NULL,
   `description` text,
   PRIMARY KEY (`language_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
@@ -222,11 +230,11 @@ INSERT IGNORE INTO `seo_url` (`store_id`, `language_id`, `query`, `keyword`)
 SELECT 0, `language_id`, 'information/blog_category', 'blog' FROM `language`;
 
 -- === Начальные данные для SEO ===
-INSERT IGNORE INTO `blog_home_description` (`language_id`, `name`, `h1`, `meta_title`, `meta_description`, `meta_keyword`, `description`) 
+INSERT IGNORE INTO `blog_home_description` (`language_id`, `name`, `h1`, `meta_title`, `meta_description`, `description`) 
 SELECT `language_id`, 'Блог', 'Блог', 'Блог', 'Читайте интересные статьи и новости в нашем блоге', 'блог, статьи, новости', 'Добро пожаловать в наш блог!' 
 FROM `language`;
 
-INSERT IGNORE INTO `author_list_description` (`language_id`, `name`, `h1`, `meta_title`, `meta_description`, `meta_keyword`, `description`) 
+INSERT IGNORE INTO `author_list_description` (`language_id`, `name`, `h1`, `meta_title`, `meta_description`, `description`) 
 SELECT `language_id`, 'Авторы', 'Наши авторы', 'Авторы', 'Познакомьтесь с нашими авторами - экспертами в своей области', 'авторы, эксперты, блог', 'Наша команда авторов' 
 FROM `language`;
 

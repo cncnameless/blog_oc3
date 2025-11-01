@@ -22,7 +22,6 @@ $_['column_action']          = 'Действие';
 $_['entry_name']             = 'Имя автора';
 $_['entry_description']      = 'Описание';
 $_['entry_meta_title']       = 'Мета тег Title';
-$_['entry_meta_keyword']     = 'Мета тег Keywords';
 $_['entry_meta_description'] = 'Мета тег Description';
 $_['entry_store']            = 'Магазины';
 $_['entry_keyword']          = 'ЧПУ';
@@ -33,6 +32,7 @@ $_['entry_status']           = 'Статус';
 // Tab
 $_['tab_general']            = 'Основное';
 $_['tab_data']               = 'Данные';
+$_['tab_social']             = 'Социальные сети';
 $_['tab_seo']                = 'SEO';
 
 // Help

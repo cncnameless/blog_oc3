@@ -64,6 +64,18 @@ class ControllerInformationAuthor extends Controller {
             $data['job_title'] = $author_info['job_title'];
             $data['bio'] = html_entity_decode($author_info['bio'], ENT_QUOTES, 'UTF-8');
 
+            // Добавляем социальные сети в данные
+            $data['website'] = $author_info['website'];
+            $data['email'] = $author_info['email'];
+            $data['github'] = $author_info['github'];
+            $data['telegram'] = $author_info['telegram'];
+            $data['vk'] = $author_info['vk'];
+            $data['facebook'] = $author_info['facebook'];
+            $data['twitter'] = $author_info['twitter'];
+            $data['instagram'] = $author_info['instagram'];
+            $data['linkedin'] = $author_info['linkedin'];
+            $data['youtube'] = $author_info['youtube'];
+
             // Обработка изображения автора с использованием настроек
             $image_width = $author_page_width;
             $image_height = $author_page_height;
@@ -174,6 +186,14 @@ class ControllerInformationAuthor extends Controller {
                 $person_data['jobTitle'] = $author_info['job_title'];
             }
 
+            // Добавляем контакты если они заполнены
+            if (!empty($author_info['email'])) {
+                $person_data['email'] = $author_info['email'];
+            }
+            if (!empty($author_info['website'])) {
+                $person_data['url'] = $author_info['website'];
+            }
+
             // Добавляем image
             $person_data['image'] = array(
                 '@type' => 'ImageObject',
@@ -199,21 +219,27 @@ class ControllerInformationAuthor extends Controller {
                 }
             }
             
-            // Формируем sameAs массив
-            if (!empty($author_info['same_as'])) {
-                $same_as_lines = array_map('trim', explode("\n", $author_info['same_as']));
-                $same_as_lines = array_filter($same_as_lines);
-                $same_as = array();
-                
-                foreach ($same_as_lines as $line) {
-                    $url = trim($line);
-                    if (!empty($url) && filter_var($url, FILTER_VALIDATE_URL)) {
-                        $same_as[] = $url;
-                    }
+            // Формируем sameAs массив из всех социальных сетей
+            $same_as = array();
+            $social_links = [
+                'github' => $author_info['github'],
+                'telegram' => $author_info['telegram'],
+                'vk' => $author_info['vk'],
+                'facebook' => $author_info['facebook'],
+                'twitter' => $author_info['twitter'],
+                'instagram' => $author_info['instagram'],
+                'linkedin' => $author_info['linkedin'],
+                'youtube' => $author_info['youtube']
+            ];
+
+            foreach ($social_links as $link) {
+                if (!empty($link) && filter_var($link, FILTER_VALIDATE_URL)) {
+                    $same_as[] = $link;
                 }
-                if (!empty($same_as)) {
-                    $person_data['sameAs'] = $same_as;
-                }
+            }
+
+            if (!empty($same_as)) {
+                $person_data['sameAs'] = $same_as;
             }
 
             // Определяем affiliation
@@ -394,6 +420,16 @@ class ControllerInformationAuthor extends Controller {
                 'image_width' => (int)$image_width,
                 'image_height' => (int)$image_height,
                 'bio' => utf8_substr(strip_tags(html_entity_decode($result['bio'], ENT_QUOTES, 'UTF-8')), 0, 200) . '..',
+                'website' => $result['website'],
+                'email' => $result['email'],
+                'github' => $result['github'],
+                'telegram' => $result['telegram'],
+                'vk' => $result['vk'],
+                'facebook' => $result['facebook'],
+                'twitter' => $result['twitter'],
+                'instagram' => $result['instagram'],
+                'linkedin' => $result['linkedin'],
+                'youtube' => $result['youtube'],
                 'total_articles' => $result['article_count'],
                 'href' => $this->url->link('information/author', 'author_id=' . $result['author_id'])
             );
@@ -439,21 +475,54 @@ class ControllerInformationAuthor extends Controller {
         $itemListElement = array();
         $author_position = 1;
         foreach ($data['authors'] as $author) {
+            $author_data = array(
+                '@type' => 'Person',
+                '@id' => $author['href'] . '#person',
+                'name' => $author['name'],
+                'url' => $author['href'],
+                'image' => array(
+                    '@type' => 'ImageObject',
+                    'url' => $author['image_original'],
+                    'width' => $author['image_width'],
+                    'height' => $author['image_height']
+                )
+            );
+
+            // Добавляем контакты если они заполнены
+            if (!empty($author['email'])) {
+                $author_data['email'] = $author['email'];
+            }
+            if (!empty($author['website'])) {
+                $author_data['url'] = $author['website'];
+            }
+
+            // Добавляем sameAs для социальных сетей
+            $same_as = array();
+            $social_links = [
+                'github' => $author['github'],
+                'telegram' => $author['telegram'],
+                'vk' => $author['vk'],
+                'facebook' => $author['facebook'],
+                'twitter' => $author['twitter'],
+                'instagram' => $author['instagram'],
+                'linkedin' => $author['linkedin'],
+                'youtube' => $author['youtube']
+            ];
+
+            foreach ($social_links as $link) {
+                if (!empty($link) && filter_var($link, FILTER_VALIDATE_URL)) {
+                    $same_as[] = $link;
+                }
+            }
+
+            if (!empty($same_as)) {
+                $author_data['sameAs'] = $same_as;
+            }
+
             $itemListElement[] = array(
                 '@type' => 'ListItem',
                 'position' => $author_position++,
-                'item' => array(
-                    '@type' => 'Person',
-                    '@id' => $author['href'] . '#person',
-                    'name' => $author['name'],
-                    'url' => $author['href'],
-                    'image' => array(
-                        '@type' => 'ImageObject',
-                        'url' => $author['image_original'],
-                        'width' => $author['image_width'],
-                        'height' => $author['image_height']
-                    )
-                )
+                'item' => $author_data
             );
         }
 
