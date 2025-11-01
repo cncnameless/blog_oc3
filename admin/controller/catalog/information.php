@@ -258,8 +258,13 @@ class ControllerCatalogInformation extends Controller {
         $data['sort'] = $sort;
         $data['order'] = $order;
 
-        $this->load->model('catalog/blog_category');
-        $data['blog_categories'] = $this->model_catalog_blog_category->getBlogCategories(array());
+        // ИСПРАВЛЕНИЕ: Добавляем проверку перед загрузкой категорий блога
+        $data['blog_categories'] = array();
+        $table_exists = $this->db->query("SHOW TABLES LIKE '" . DB_PREFIX . "blog_category'");
+        if ($table_exists->num_rows) {
+            $this->load->model('catalog/blog_category');
+            $data['blog_categories'] = $this->model_catalog_blog_category->getBlogCategories(array());
+        }
 
         if (isset($this->error['warning'])) {
             $data['error_warning'] = $this->error['warning'];
@@ -472,9 +477,13 @@ class ControllerCatalogInformation extends Controller {
             $data['information_store'] = array(0);
         }
 
-        $this->load->model('catalog/blog_category');
-
-        $data['blog_categories'] = $this->model_catalog_blog_category->getBlogCategories(array());
+        // ИСПРАВЛЕНИЕ: Добавляем проверку перед загрузкой категорий блога
+        $data['blog_categories'] = array();
+        $table_exists = $this->db->query("SHOW TABLES LIKE '" . DB_PREFIX . "blog_category'");
+        if ($table_exists->num_rows) {
+            $this->load->model('catalog/blog_category');
+            $data['blog_categories'] = $this->model_catalog_blog_category->getBlogCategories(array());
+        }
 
         if (isset($this->request->post['information_blog_category'])) {
             $data['information_blog_category'] = $this->request->post['information_blog_category'];
@@ -485,8 +494,12 @@ class ControllerCatalogInformation extends Controller {
         }
 
         // === ДОБАВЛЯЕМ БЛОК АВТОРОВ ===
-        $this->load->model('catalog/author');
-        $data['authors'] = $this->model_catalog_author->getAuthors(array('filter_status' => 1));
+        $data['authors'] = array();
+        $author_table_exists = $this->db->query("SHOW TABLES LIKE '" . DB_PREFIX . "article_author'");
+        if ($author_table_exists->num_rows) {
+            $this->load->model('catalog/author');
+            $data['authors'] = $this->model_catalog_author->getAuthors(array('filter_status' => 1));
+        }
 
         if (isset($this->request->post['information_author'])) {
             $data['information_author'] = $this->request->post['information_author'];

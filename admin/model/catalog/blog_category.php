@@ -202,6 +202,12 @@ class ModelCatalogBlogCategory extends Model {
     }
 
     public function getBlogCategory($blog_category_id) {
+        // ПРОВЕРКА: Существует ли таблица blog_category
+        $table_exists = $this->db->query("SHOW TABLES LIKE '" . DB_PREFIX . "blog_category'");
+        if (!$table_exists->num_rows) {
+            return array();
+        }
+
         // Проверяем существование таблицы blog_category_path
         $path_table_exists = $this->db->query("SHOW TABLES LIKE '" . DB_PREFIX . "blog_category_path'");
         
@@ -216,6 +222,12 @@ class ModelCatalogBlogCategory extends Model {
     }
 
     public function getBlogCategories($data = array()) {
+        // ИСПРАВЛЕНИЕ: Добавляем проверку существования таблицы blog_category
+        $table_exists = $this->db->query("SHOW TABLES LIKE '" . DB_PREFIX . "blog_category'");
+        if (!$table_exists->num_rows) {
+            return array();
+        }
+
         // Проверяем существование таблицы blog_category_path
         $path_table_exists = $this->db->query("SHOW TABLES LIKE '" . DB_PREFIX . "blog_category_path'");
         
@@ -299,6 +311,12 @@ class ModelCatalogBlogCategory extends Model {
     }
 
     public function getTotalBlogCategories() {
+        // ПРОВЕРКА: Существует ли таблица blog_category
+        $table_exists = $this->db->query("SHOW TABLES LIKE '" . DB_PREFIX . "blog_category'");
+        if (!$table_exists->num_rows) {
+            return 0;
+        }
+
         $query = $this->db->query("SELECT COUNT(*) AS total FROM " . DB_PREFIX . "blog_category");
 
         return $query->row['total'];

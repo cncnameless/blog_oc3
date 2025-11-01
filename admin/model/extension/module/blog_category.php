@@ -154,7 +154,7 @@ class ModelExtensionModuleBlogCategory extends Model {
         // Создаем индекс для keyword
         $this->db->query("CREATE INDEX IF NOT EXISTS `keyword` ON `" . DB_PREFIX . "blog_category_description` (`keyword`)");
 
-        // Добавляем базовые настройки
+        // Добавляем базовые настройки (БЕЗ создания модуля в таблице module)
         $this->addBasicSettings();
         
         // Добавляем начальные данные для SEO
@@ -162,20 +162,15 @@ class ModelExtensionModuleBlogCategory extends Model {
     }
 
     public function uninstall() {
-        // Не удаляем таблицы при деинсталляции, так как они могут содержать данные
         // Удаляем только настройки модуля
-        
-        $this->db->query("DELETE FROM `" . DB_PREFIX . "module` WHERE `code` = 'blog_category'");
         $this->db->query("DELETE FROM `" . DB_PREFIX . "setting` WHERE `code` = 'blog_category'");
+        
+        // НЕ удаляем записи из таблицы module, так как модуль может быть установлен через установщик расширений
     }
 
     private function addBasicSettings() {
-        // Добавляем модуль в таблицу module если его нет
-        $query = $this->db->query("SELECT * FROM `" . DB_PREFIX . "module` WHERE `code` = 'blog_category'");
-        if (!$query->num_rows) {
-            $this->db->query("INSERT INTO `" . DB_PREFIX . "module` (`name`, `code`, `setting`) VALUES ('Блог', 'blog_category', '{\"name\":\"Блог\",\"status\":\"1\"}')");
-        }
-
+        // НЕ добавляем модуль в таблицу module - это делает OpenCart автоматически при установке через установщик
+        
         // Добавляем настройки модуля если их нет
         $settings_to_add = [
             'blog_category_status' => '1',

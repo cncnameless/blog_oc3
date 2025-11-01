@@ -56,13 +56,15 @@ CREATE TABLE IF NOT EXISTS `article_author` (
   `status` tinyint(1) NOT NULL DEFAULT '1',
   `date_added` datetime NOT NULL,
   `date_modified` datetime NOT NULL,
-  `company_employee` TINYINT(1) NOT NULL DEFAULT '0',
-  `affiliation` VARCHAR(255) NOT NULL DEFAULT '',
-  `knows_about` TEXT NOT NULL,
-  `knows_language` TEXT NOT NULL,
-  `same_as` TEXT NOT NULL,
   PRIMARY KEY (`author_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+
+-- === ДОБАВЛЯЕМ НОВЫЕ ПОЛЯ ДЛЯ МИКРОРАЗМЕТКИ ===
+ALTER TABLE `article_author` ADD COLUMN IF NOT EXISTS `company_employee` TINYINT(1) NOT NULL DEFAULT '0';
+ALTER TABLE `article_author` ADD COLUMN IF NOT EXISTS `affiliation` VARCHAR(255) NOT NULL DEFAULT '';
+ALTER TABLE `article_author` ADD COLUMN IF NOT EXISTS `knows_about` TEXT NOT NULL;
+ALTER TABLE `article_author` ADD COLUMN IF NOT EXISTS `knows_language` TEXT NOT NULL;
+ALTER TABLE `article_author` ADD COLUMN IF NOT EXISTS `same_as` TEXT NOT NULL;
 
 -- === Описания авторов ===
 CREATE TABLE IF NOT EXISTS `article_author_description` (
