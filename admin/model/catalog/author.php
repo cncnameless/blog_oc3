@@ -15,7 +15,6 @@ class ModelCatalogAuthor extends Model {
             affiliation = '" . $this->db->escape($data['affiliation']) . "',
             knows_about = '" . $this->db->escape($data['knows_about']) . "',
             knows_language = '" . $this->db->escape($data['knows_language']) . "',
-            same_as = '" . $this->db->escape($data['same_as']) . "',
             date_added = NOW(), 
             date_modified = NOW()");
 
@@ -69,7 +68,6 @@ class ModelCatalogAuthor extends Model {
             affiliation = '" . $this->db->escape($data['affiliation']) . "',
             knows_about = '" . $this->db->escape($data['knows_about']) . "',
             knows_language = '" . $this->db->escape($data['knows_language']) . "',
-            same_as = '" . $this->db->escape($data['same_as']) . "',
             date_modified = NOW() 
             WHERE author_id = '" . (int)$author_id . "'");
 
@@ -267,7 +265,7 @@ class ModelCatalogAuthor extends Model {
         
         if ($info_to_author_exists->num_rows) {
             $sql = "SELECT a.*, ad.name, ad.job_title, ad.bio, ad.description,
-                           a.company_employee, a.affiliation, a.knows_about, a.knows_language, a.same_as,
+                           a.company_employee, a.affiliation, a.knows_about, a.knows_language,
                            (SELECT COUNT(*) FROM " . DB_PREFIX . "information_to_author i2a 
                             LEFT JOIN " . DB_PREFIX . "information i ON (i2a.information_id = i.information_id)
                             WHERE i2a.author_id = a.author_id AND i.status = '1') as article_count
@@ -278,7 +276,7 @@ class ModelCatalogAuthor extends Model {
         } else {
             // Если таблицы information_to_author нет, используем упрощенный запрос без подсчета статей
             $sql = "SELECT a.*, ad.name, ad.job_title, ad.bio, ad.description, 
-                           a.company_employee, a.affiliation, a.knows_about, a.knows_language, a.same_as,
+                           a.company_employee, a.affiliation, a.knows_about, a.knows_language,
                            0 as article_count
                     FROM " . DB_PREFIX . "article_author a 
                     LEFT JOIN " . DB_PREFIX . "article_author_description ad ON (a.author_id = ad.author_id) 
