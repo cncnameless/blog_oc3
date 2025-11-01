@@ -434,3 +434,84 @@
 #information-blog-category .breadcrumb {
     margin-bottom: 20px;
 }
+
+/* =============================== */
+/* СТИЛИ ДЛЯ ТЕГОВ СТАТЕЙ */
+/* =============================== */
+
+.blog-tags {
+    margin: 20px 0;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 5px;
+    border-left: 4px solid #4ab2f1;
+}
+
+.blog-tags h4 {
+    margin: 0 0 10px 0;
+    font-size: 16px;
+    color: #333;
+    font-weight: 600;
+}
+
+.tags-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0;
+}
+
+.tag-label {
+    display: inline-block;
+    background: #ffffff;
+    color: #495057;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+    border: 1px solid #dee2e6;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    transition: all 0.2s ease;
+    cursor: default;
+    user-select: none;
+}
+
+.tag-label:hover {
+    background: #4ab2f1;
+    color: #ffffff;
+    border-color: #4ab2f1;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 5px rgba(74, 178, 241, 0.3);
+}
+
+/* Адаптивность для тегов */
+@media (max-width: 768px) {
+    .blog-tags {
+        padding: 12px;
+    }
+    
+    .tags-list {
+        gap: 6px;
+    }
+    
+    .tag-label {
+        padding: 5px 10px;
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 576px) {
+    .blog-tags {
+        margin: 15px 0;
+        padding: 10px;
+    }
+    
+    .blog-tags h4 {
+        font-size: 15px;
+    }
+    
+    .tag-label {
+        padding: 4px 8px;
+        font-size: 11px;
+    }
+}

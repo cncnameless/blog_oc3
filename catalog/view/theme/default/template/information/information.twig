@@ -84,6 +84,18 @@
         </div>
       </div>
       {% endif %}
+
+      {# ДОБАВЛЯЕМ: Теги статьи #}
+      {% if tags %}
+      <div class="blog-tags">
+        <h4>Теги:</h4>
+        <div class="tags-list">
+          {% for tag in tags %}
+          <span class="tag-label">{{ tag.name }}</span>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
       
       <div class="information-content">
         {{ description }}

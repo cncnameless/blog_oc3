@@ -31,6 +31,7 @@
             <li><a href="#tab-schema" data-toggle="tab">Микроразметка</a></li>
             <li><a href="#tab-blog" data-toggle="tab">{{ tab_blog }}</a></li>
             <li><a href="#tab-authors" data-toggle="tab">Авторы</a></li>
+            <li><a href="#tab-tags" data-toggle="tab">{{ tab_tags }}</a></li>
             <li><a href="#tab-design" data-toggle="tab">{{ tab_design }}</a></li>
           </ul>
           <div class="tab-content">
@@ -278,6 +279,24 @@
                 </div>
               </div>
             </div>
+            <div class="tab-pane" id="tab-tags">
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-tags">{{ entry_tags }}</label>
+                <div class="col-sm-10">
+                  <input type="text" name="tags" value="" placeholder="Введите тег" id="input-tags" class="form-control" />
+                  <div class="well well-sm" style="height: 150px; overflow: auto;" id="information-tags">
+                    {% for selected_tag in selected_tags %}
+                    <div id="information-tag{{ selected_tag.tag_id }}">
+                      <i class="fa fa-minus-circle"></i> 
+                      {{ selected_tag.name }}
+                      <input type="hidden" name="information_tags[]" value="{{ selected_tag.name }}" />
+                    </div>
+                    {% endfor %}
+                  </div>
+                  <small class="text-muted">{{ help_tags }}</small>
+                </div>
+              </div>
+            </div>
             <div class="tab-pane" id="tab-design">
               <div class="table-responsive">
                 <table class="table table-bordered table-hover">
@@ -409,6 +428,59 @@ $('input[name=\'author\']').autocomplete({
 });
 
 $('#information-author').delegate('.fa-minus-circle', 'click', function() {
+    $(this).parent().remove();
+});
+
+// === ДОБАВЛЯЕМ КОД ДЛЯ ТЕГОВ ===
+$('input[name=\'tags\']').autocomplete({
+    'source': function(request, response) {
+        $.ajax({
+            url: 'index.php?route=catalog/information/autocompleteTags&user_token={{ user_token }}&filter_name=' +  encodeURIComponent(request),
+            dataType: 'json',
+            success: function(json) {
+                response($.map(json, function(item) {
+                    return {
+                        label: item['name'],
+                        value: item['tag_id']
+                    }
+                }));
+            }
+        });
+    },
+    'select': function(item) {
+        $('input[name=\'tags\']').val('');
+
+        // Проверяем, нет ли уже такого тега
+        if ($('#information-tag' + item['value']).length == 0) {
+            $('#information-tags').append('<div id="information-tag' + item['value'] + '"><i class="fa fa-minus-circle"></i> ' + item['label'] + '<input type="hidden" name="information_tags[]" value="' + item['label'] + '" /></div>');
+        }
+    }
+});
+
+// Также добавляем тег по нажатию Enter
+$('input[name=\'tags\']').on('keydown', function(e) {
+    if (e.keyCode == 13) {
+        e.preventDefault();
+        var tag_name = $(this).val().trim();
+        if (tag_name) {
+            // Проверяем, нет ли уже такого тега
+            var exists = false;
+            $('#information-tags input[type="hidden"]').each(function() {
+                if ($(this).val() === tag_name) {
+                    exists = true;
+                    return false;
+                }
+            });
+
+            if (!exists) {
+                $('#information-tags').append('<div><i class="fa fa-minus-circle"></i> ' + tag_name + '<input type="hidden" name="information_tags[]" value="' + tag_name + '" /></div>');
+            }
+            $(this).val('');
+        }
+    }
+});
+
+$('#information-tags').delegate('.fa-minus-circle', 'click', function() {
     $(this).parent().remove();
 });
 

@@ -40,6 +40,25 @@ class ModelCatalogInformation extends Model {
         $this->db->query("UPDATE " . DB_PREFIX . "information SET viewed = (viewed + 1) WHERE information_id = '" . (int)$information_id . "'");
     }
 
+    // === ДОБАВЛЯЕМ МЕТОД ДЛЯ ПОЛУЧЕНИЯ ТЕГОВ СТАТЬИ ===
+    public function getInformationTags($information_id) {
+        // Проверяем существование таблиц
+        $table_tag_exists = $this->db->query("SHOW TABLES LIKE '" . DB_PREFIX . "blog_tag'");
+        $table_relation_exists = $this->db->query("SHOW TABLES LIKE '" . DB_PREFIX . "blog_information_to_tag'");
+        
+        if (!$table_tag_exists->num_rows || !$table_relation_exists->num_rows) {
+            return array();
+        }
+
+        $query = $this->db->query("SELECT t.tag_id, t.name FROM " . DB_PREFIX . "blog_tag t 
+            LEFT JOIN " . DB_PREFIX . "blog_information_to_tag it ON t.tag_id = it.tag_id 
+            WHERE it.information_id = '" . (int)$information_id . "' 
+            AND t.status = 1 
+            ORDER BY t.name ASC");
+
+        return $query->rows;
+    }
+
     // Методы для работы с блогом
     public function getInformationBlogCategories($information_id) {
         // Проверяем существование таблицы

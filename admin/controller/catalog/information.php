@@ -526,6 +526,31 @@ class ControllerCatalogInformation extends Controller {
         }
         // === КОНЕЦ БЛОКА АВТОРОВ ===
 
+        // === ДОБАВЛЯЕМ БЛОК ТЕГОВ ===
+        if (isset($this->request->post['information_tags'])) {
+            $data['information_tags'] = $this->request->post['information_tags'];
+        } elseif (isset($this->request->get['information_id'])) {
+            $tags_data = $this->model_catalog_information->getInformationTags($this->request->get['information_id']);
+            $data['information_tags'] = array();
+            foreach ($tags_data as $tag) {
+                $data['information_tags'][] = $tag['name'];
+            }
+        } else {
+            $data['information_tags'] = array();
+        }
+
+        // Формируем массив выбранных тегов для отображения
+        $data['selected_tags'] = array();
+        if (isset($data['information_tags']) && is_array($data['information_tags'])) {
+            foreach ($data['information_tags'] as $tag_name) {
+                $data['selected_tags'][] = array(
+                    'tag_id' => 0, // Временный ID, не используется
+                    'name' => $tag_name
+                );
+            }
+        }
+        // === КОНЕЦ БЛОКА ТЕГОВ ===
+
         // Формируем массив выбранных категорий
         $data['selected_blog_categories'] = array();
         foreach ($data['information_blog_category'] as $blog_category_id) {
@@ -789,6 +814,39 @@ class ControllerCatalogInformation extends Controller {
 
         foreach ($json as $key => $value) {
             $sort_order[$key] = $value['title'];
+        }
+
+        array_multisort($sort_order, SORT_ASC, $json);
+
+        $this->response->addHeader('Content-Type: application/json');
+        $this->response->setOutput(json_encode($json));
+    }
+
+    // === ДОБАВЛЯЕМ МЕТОД ДЛЯ АВТОДОПОЛНЕНИЯ ТЕГОВ ===
+    public function autocompleteTags() {
+        $json = array();
+
+        if (isset($this->request->get['filter_name'])) {
+            $this->load->model('catalog/information');
+
+            $filter_data = array(
+                'filter_name' => $this->request->get['filter_name']
+            );
+
+            $results = $this->model_catalog_information->getTags($filter_data);
+
+            foreach ($results as $result) {
+                $json[] = array(
+                    'tag_id' => $result['tag_id'],
+                    'name'        => strip_tags(html_entity_decode($result['name'], ENT_QUOTES, 'UTF-8'))
+                );
+            }
+        }
+
+        $sort_order = array();
+
+        foreach ($json as $key => $value) {
+            $sort_order[$key] = $value['name'];
         }
 
         array_multisort($sort_order, SORT_ASC, $json);

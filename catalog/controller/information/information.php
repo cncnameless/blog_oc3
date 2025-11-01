@@ -115,6 +115,9 @@ class ControllerInformationInformation extends Controller {
                     );
                 }
 
+                // === ДОБАВЛЯЕМ ПОЛУЧЕНИЕ ТЕГОВ ===
+                $data['tags'] = $this->model_catalog_information->getInformationTags($information_id);
+
                 // Microdata для Schema.org
                 $data['json_ld'] = $this->generateSchemaMarkup($information_info, $data);
 
@@ -124,6 +127,7 @@ class ControllerInformationInformation extends Controller {
                 $data['viewed'] = '';
                 $data['reading_time'] = '';
                 $data['authors'] = array();
+                $data['tags'] = array();
                 $data['json_ld'] = array();
             }
 
@@ -253,7 +257,7 @@ class ControllerInformationInformation extends Controller {
                 'headline' => $information_info['title'],
                 'description' => $clean_description,
                 'datePublished' => $information_info['date_added'],
-                'dateModified' => $information_info['date_modified'],
+                'dateModified' => $information_info['date_modified'] ? $information_info['date_modified'] : $information_info['date_added'],
                 'url' => $current_url
             );
 
@@ -296,6 +300,18 @@ class ControllerInformationInformation extends Controller {
                 } else {
                     $article_data['author'] = $authors_array;
                 }
+            }
+
+            // === ДОБАВЛЯЕМ ТЕГИ В МИКРОРАЗМЕТКУ ===
+            if (isset($data['tags']) && $data['tags']) {
+                $about_array = array();
+                foreach ($data['tags'] as $tag) {
+                    $about_array[] = array(
+                        '@type' => 'Thing',
+                        'name' => $tag['name']
+                    );
+                }
+                $article_data['about'] = $about_array;
             }
 
             // Издатель (организация) - для всех типов кроме Organization

@@ -58,6 +58,12 @@ class ModelCatalogInformation extends Model {
         }
         // === КОНЕЦ БЛОКА АВТОРОВ ===
 
+        // === ДОБАВЛЯЕМ СОХРАНЕНИЕ ТЕГОВ ===
+        if (isset($data['information_tags'])) {
+            $this->saveInformationTags($information_id, $data['information_tags']);
+        }
+        // === КОНЕЦ БЛОКА ТЕГОВ ===
+
         // SEO URL
         if (isset($data['information_seo_url'])) {
             foreach ($data['information_seo_url'] as $store_id => $language) {
@@ -131,6 +137,10 @@ class ModelCatalogInformation extends Model {
         }
         // === КОНЕЦ БЛОКА ===
 
+        // === ДОБАВЛЯЕМ УДАЛЕНИЕ СТАРЫХ ТЕГОВ ===
+        $this->deleteInformationTags($information_id);
+        // === КОНЕЦ БЛОКА ===
+
         if (isset($data['information_store'])) {
             foreach ($data['information_store'] as $store_id) {
                 $this->db->query("INSERT IGNORE INTO " . DB_PREFIX . "information_to_store SET 
@@ -156,6 +166,12 @@ class ModelCatalogInformation extends Model {
                     sort_order = '" . (int)$author['sort_order'] . "',
                     is_primary = '" . (int)$author['is_primary'] . "'");
             }
+        }
+        // === КОНЕЦ БЛОКА ===
+
+        // === ДОБАВЛЯЕМ СОХРАНЕНИЕ НОВЫХ ТЕГОВ ===
+        if (isset($data['information_tags'])) {
+            $this->saveInformationTags($information_id, $data['information_tags']);
         }
         // === КОНЕЦ БЛОКА ===
 
@@ -207,10 +223,121 @@ class ModelCatalogInformation extends Model {
             $this->db->query("DELETE FROM `" . DB_PREFIX . "information_to_author` WHERE information_id = '" . (int)$information_id . "'");
         }
         // === КОНЕЦ БЛОКА ===
+
+        // === ДОБАВЛЯЕМ УДАЛЕНИЕ ТЕГОВ ===
+        $this->deleteInformationTags($information_id);
+        // === КОНЕЦ БЛОКА ===
         
         $this->db->query("DELETE FROM `" . DB_PREFIX . "seo_url` WHERE query = 'information_id=" . (int)$information_id . "'");
 
         $this->cache->delete('information');
+    }
+
+    // === ДОБАВЛЯЕМ НОВЫЕ МЕТОДЫ ДЛЯ РАБОТЫ С ТЕГАМИ ===
+
+    /**
+     * Сохраняет теги для статьи
+     */
+    private function saveInformationTags($information_id, $tags) {
+        // Проверяем существование таблицы тегов
+        $table_exists = $this->db->query("SHOW TABLES LIKE '" . DB_PREFIX . "blog_tag'");
+        if (!$table_exists->num_rows) {
+            return;
+        }
+
+        $table_relation_exists = $this->db->query("SHOW TABLES LIKE '" . DB_PREFIX . "blog_information_to_tag'");
+        if (!$table_relation_exists->num_rows) {
+            return;
+        }
+
+        if (!is_array($tags)) {
+            $tags = array();
+        }
+
+        foreach ($tags as $tag_name) {
+            $tag_name = trim($tag_name);
+            if (empty($tag_name)) {
+                continue;
+            }
+
+            // Ищем существующий тег
+            $query = $this->db->query("SELECT tag_id FROM " . DB_PREFIX . "blog_tag WHERE name = '" . $this->db->escape($tag_name) . "'");
+            
+            if ($query->num_rows) {
+                $tag_id = $query->row['tag_id'];
+            } else {
+                // Создаем новый тег
+                $this->db->query("INSERT INTO " . DB_PREFIX . "blog_tag SET 
+                    name = '" . $this->db->escape($tag_name) . "',
+                    status = 1,
+                    date_added = NOW(),
+                    date_modified = NOW()");
+                
+                $tag_id = $this->db->getLastId();
+            }
+
+            // Связываем тег со статьей
+            $this->db->query("INSERT IGNORE INTO " . DB_PREFIX . "blog_information_to_tag SET 
+                information_id = '" . (int)$information_id . "',
+                tag_id = '" . (int)$tag_id . "'");
+        }
+    }
+
+    /**
+     * Удаляет теги статьи
+     */
+    private function deleteInformationTags($information_id) {
+        // Проверяем существование таблицы связи
+        $table_exists = $this->db->query("SHOW TABLES LIKE '" . DB_PREFIX . "blog_information_to_tag'");
+        if (!$table_exists->num_rows) {
+            return;
+        }
+
+        $this->db->query("DELETE FROM " . DB_PREFIX . "blog_information_to_tag WHERE information_id = '" . (int)$information_id . "'");
+    }
+
+    /**
+     * Получает теги статьи
+     */
+    public function getInformationTags($information_id) {
+        // Проверяем существование таблиц
+        $table_tag_exists = $this->db->query("SHOW TABLES LIKE '" . DB_PREFIX . "blog_tag'");
+        $table_relation_exists = $this->db->query("SHOW TABLES LIKE '" . DB_PREFIX . "blog_information_to_tag'");
+        
+        if (!$table_tag_exists->num_rows || !$table_relation_exists->num_rows) {
+            return array();
+        }
+
+        $query = $this->db->query("SELECT t.tag_id, t.name FROM " . DB_PREFIX . "blog_tag t 
+            LEFT JOIN " . DB_PREFIX . "blog_information_to_tag it ON t.tag_id = it.tag_id 
+            WHERE it.information_id = '" . (int)$information_id . "' 
+            AND t.status = 1 
+            ORDER BY t.name ASC");
+
+        return $query->rows;
+    }
+
+    /**
+     * Автодополнение для тегов
+     */
+    public function getTags($filter_name = '') {
+        // Проверяем существование таблицы
+        $table_exists = $this->db->query("SHOW TABLES LIKE '" . DB_PREFIX . "blog_tag'");
+        if (!$table_exists->num_rows) {
+            return array();
+        }
+
+        $sql = "SELECT * FROM " . DB_PREFIX . "blog_tag WHERE status = 1";
+
+        if (!empty($filter_name)) {
+            $sql .= " AND name LIKE '" . $this->db->escape($filter_name) . "%'";
+        }
+
+        $sql .= " ORDER BY name";
+
+        $query = $this->db->query($sql);
+
+        return $query->rows;
     }
 
     public function getInformation($information_id) {

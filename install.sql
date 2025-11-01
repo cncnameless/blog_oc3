@@ -6,6 +6,23 @@
 -- Отключаем предупреждения о дублировании
 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0;
 
+-- === Таблица тегов ===
+CREATE TABLE IF NOT EXISTS `blog_tag` (
+  `tag_id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL,
+  `status` tinyint(1) NOT NULL DEFAULT 1,
+  `date_added` datetime NOT NULL,
+  `date_modified` datetime NOT NULL,
+  PRIMARY KEY (`tag_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+
+-- === Связь тегов со статьями ===
+CREATE TABLE IF NOT EXISTS `blog_information_to_tag` (
+  `information_id` int(11) NOT NULL,
+  `tag_id` int(11) NOT NULL,
+  PRIMARY KEY (`information_id`,`tag_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+
 -- === Таблица категорий блога ===
 CREATE TABLE IF NOT EXISTS `blog_category` (
   `blog_category_id` int(11) NOT NULL AUTO_INCREMENT,
